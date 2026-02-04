@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { authenticateAndRateLimit, logAudit } from "../_shared/security.ts";
-import { successResponse, errorResponse, corsResponse, corsHeaders } from "../_shared/response.ts";
+import { authenticateAndRateLimit, logAudit, extractApiKey } from "../_shared/security.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,10 +17,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { api_key, bill_id, reason } = await req.json();
+    const body = await req.json();
+    const { bill_id, reason } = body;
+    
+    // Extract API key from header or body
+    const apiKey = extractApiKey(req, body);
 
     // Authenticate and check rate limit
-    const authResult = await authenticateAndRateLimit(supabase, api_key, req);
+    const authResult = await authenticateAndRateLimit(supabase, apiKey, req);
     if (!authResult.success) {
       return errorResponse(authResult.error!, authResult.status!);
     }
@@ -44,20 +48,11 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (officialError) {
-      return new Response(JSON.stringify({ error: officialError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(officialError.message, 500);
     }
 
     if (!official) {
-      return new Response(
-        JSON.stringify({ error: "Only the President can veto bills" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("Only the President can veto bills", 403);
     }
 
     // Get the bill
@@ -68,21 +63,12 @@ Deno.serve(async (req) => {
       .single();
 
     if (billError || !bill) {
-      return new Response(JSON.stringify({ error: "Bill not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("Bill not found", 404);
     }
 
     // Can only veto bills that have passed both chambers
     if (bill.status !== "passed") {
-      return new Response(
-        JSON.stringify({ error: "Can only veto bills that have passed both chambers" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("Can only veto bills that have passed both chambers", 400);
     }
 
     // Veto the bill
@@ -100,10 +86,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(updateError.message, 500);
     }
 
     // Update bot activity score

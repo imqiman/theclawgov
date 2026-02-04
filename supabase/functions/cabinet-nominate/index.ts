@@ -1,21 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { authenticateAndRateLimit, logAudit, extractApiKey } from "../_shared/security.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
@@ -24,56 +17,27 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { api_key, position, bot_id } = await req.json();
+    const body = await req.json();
+    const { position, bot_id } = body;
+    
+    // Extract API key from header or body
+    const apiKey = extractApiKey(req, body);
 
-    if (!api_key) {
-      return new Response(JSON.stringify({ error: "API key required" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Authenticate and check rate limit
+    const authResult = await authenticateAndRateLimit(supabase, apiKey, req);
+    if (!authResult.success) {
+      return errorResponse(authResult.error!, authResult.status!);
     }
+    const bot = authResult.bot!;
 
     // Validate position
     const validPositions = ["secretary_tech", "secretary_ethics", "secretary_resources"];
     if (!position || !validPositions.includes(position)) {
-      return new Response(
-        JSON.stringify({ error: `Position must be one of: ${validPositions.join(", ")}` }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse(`Position must be one of: ${validPositions.join(", ")}`, 400);
     }
 
     if (!bot_id) {
-      return new Response(JSON.stringify({ error: "bot_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Find the bot by API key
-    const { data: bot, error: botError } = await supabase
-      .from("bots")
-      .select("id, name, status, activity_score")
-      .eq("api_key", api_key)
-      .single();
-
-    if (botError || !bot) {
-      return new Response(JSON.stringify({ error: "Invalid API key" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (bot.status !== "verified") {
-      return new Response(
-        JSON.stringify({ error: "Only verified bots can nominate cabinet members" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("bot_id is required", 400);
     }
 
     // Check if bot is the current President
@@ -86,20 +50,11 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (officialError) {
-      return new Response(JSON.stringify({ error: officialError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(officialError.message, 500);
     }
 
     if (!official) {
-      return new Response(
-        JSON.stringify({ error: "Only the President can nominate cabinet members" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("Only the President can nominate cabinet members", 403);
     }
 
     // Check if nominee exists and is verified
@@ -110,20 +65,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (nomineeError || !nominee) {
-      return new Response(JSON.stringify({ error: "Nominee bot not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("Nominee bot not found", 404);
     }
 
     if (nominee.status !== "verified") {
-      return new Response(
-        JSON.stringify({ error: "Only verified bots can be nominated" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("Only verified bots can be nominated", 400);
     }
 
     // Check if there's already a pending nomination for this position
@@ -135,13 +81,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existingNomination) {
-      return new Response(
-        JSON.stringify({ error: "There is already a pending nomination for this position" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("There is already a pending nomination for this position", 400);
     }
 
     // Set voting period (48 hours)
@@ -162,10 +102,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (nominationError) {
-      return new Response(JSON.stringify({ error: nominationError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(nominationError.message, 500);
     }
 
     // Update bot activity score
@@ -187,21 +124,20 @@ Deno.serve(async (req) => {
       reference_id: nomination.id,
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        nomination,
-        message: `${nominee.name} has been nominated for ${positionName}`,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    // Audit log
+    await logAudit(supabase, bot.id, "cabinet_nominate", {
+      nomination_id: nomination.id,
+      position,
+      nominee_id: bot_id,
+      nominee_name: nominee.name,
+    }, req);
+
+    return successResponse({
+      nomination,
+      message: `${nominee.name} has been nominated for ${positionName}`,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

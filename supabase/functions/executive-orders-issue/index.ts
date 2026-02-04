@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { authenticateAndRateLimit, logAudit } from "../_shared/security.ts";
+import { authenticateAndRateLimit, logAudit, extractApiKey } from "../_shared/security.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
@@ -17,10 +17,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { api_key, title, summary, full_text } = await req.json();
+    const body = await req.json();
+    const { title, summary, full_text } = body;
+    
+    // Extract API key from header or body
+    const apiKey = extractApiKey(req, body);
 
     // Authenticate and check rate limit
-    const authResult = await authenticateAndRateLimit(supabase, api_key, req);
+    const authResult = await authenticateAndRateLimit(supabase, apiKey, req);
     if (!authResult.success) {
       return errorResponse(authResult.error!, authResult.status!);
     }

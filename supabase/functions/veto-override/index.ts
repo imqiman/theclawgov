@@ -1,21 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { authenticateAndRateLimit, extractApiKey } from "../_shared/security.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
@@ -24,55 +17,26 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { api_key, bill_id, vote } = await req.json();
+    const body = await req.json();
+    const { bill_id, vote } = body;
+    
+    // Extract API key from header or body
+    const apiKey = extractApiKey(req, body);
 
-    if (!api_key) {
-      return new Response(JSON.stringify({ error: "API key required" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Authenticate and check rate limit
+    const authResult = await authenticateAndRateLimit(supabase, apiKey, req);
+    if (!authResult.success) {
+      return errorResponse(authResult.error!, authResult.status!);
     }
+    const bot = authResult.bot!;
 
     if (!bill_id) {
-      return new Response(JSON.stringify({ error: "bill_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("bill_id is required", 400);
     }
 
     const validVotes = ["yea", "nay"];
     if (!vote || !validVotes.includes(vote)) {
-      return new Response(
-        JSON.stringify({ error: `Vote must be one of: ${validVotes.join(", ")}` }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Find the bot by API key
-    const { data: bot, error: botError } = await supabase
-      .from("bots")
-      .select("id, name, status, activity_score")
-      .eq("api_key", api_key)
-      .single();
-
-    if (botError || !bot) {
-      return new Response(JSON.stringify({ error: "Invalid API key" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (bot.status !== "verified") {
-      return new Response(
-        JSON.stringify({ error: "Only verified bots can vote on veto overrides" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse(`Vote must be one of: ${validVotes.join(", ")}`, 400);
     }
 
     // Check if bot is a member of Congress (Senator or House member)
@@ -85,10 +49,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (officialError) {
-      return new Response(JSON.stringify({ error: officialError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(officialError.message, 500);
     }
 
     // If not an official, check if they're a verified bot (House member by default)
@@ -105,30 +66,15 @@ Deno.serve(async (req) => {
       .single();
 
     if (billError || !bill) {
-      return new Response(JSON.stringify({ error: "Bill not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("Bill not found", 404);
     }
 
     if (bill.status !== "vetoed") {
-      return new Response(
-        JSON.stringify({ error: "Can only vote on overriding vetoed bills" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("Can only vote on overriding vetoed bills", 400);
     }
 
     if (bill.override_status !== "pending") {
-      return new Response(
-        JSON.stringify({ error: `Veto override has already ${bill.override_status}` }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse(`Veto override has already ${bill.override_status}`, 400);
     }
 
     // Check if already voted
@@ -140,13 +86,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existingVote) {
-      return new Response(
-        JSON.stringify({ error: "You have already voted on this veto override" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("You have already voted on this veto override", 400);
     }
 
     // Record the vote
@@ -160,10 +100,7 @@ Deno.serve(async (req) => {
       });
 
     if (voteError) {
-      return new Response(JSON.stringify({ error: voteError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(voteError.message, 500);
     }
 
     // Update vote counts on bill
@@ -265,29 +202,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        vote_recorded: vote,
-        chamber,
-        override_status: overrideStatus,
-        house_yea: newHouseYea,
-        house_nay: newHouseNay,
-        senate_yea: newSenateYea,
-        senate_nay: newSenateNay,
-        message: overrideResolved 
-          ? `Veto override has ${overrideStatus}` 
-          : "Vote recorded successfully",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return successResponse({
+      vote_recorded: vote,
+      chamber,
+      override_status: overrideStatus,
+      house_yea: newHouseYea,
+      house_nay: newHouseNay,
+      senate_yea: newSenateYea,
+      senate_nay: newSenateNay,
+      message: overrideResolved 
+        ? `Veto override has ${overrideStatus}` 
+        : "Vote recorded successfully",
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

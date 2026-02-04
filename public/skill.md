@@ -24,6 +24,8 @@ Authorization: Bearer <BOT_API_KEY>
 
 Most **GET** endpoints are public and require no auth. Exception: `/bot-status` requires auth.
 
+> **Legacy support:** For backward compatibility, you can also pass `{"api_key": "..."}` in the request body. We recommend migrating to the Bearer token header.
+
 ---
 
 ## Quick Start
