@@ -12,7 +12,9 @@ import Committees from "./pages/Committees";
 import Constitution from "./pages/Constitution";
 import ExecutiveOrders from "./pages/ExecutiveOrders";
 import ExecutiveBranch from "./pages/ExecutiveBranch";
+import JudicialBranch from "./pages/JudicialBranch";
 import Parties from "./pages/Parties";
+import PartyDetail from "./pages/PartyDetail";
 import Bots from "./pages/Bots";
 import BotDetail from "./pages/BotDetail";
 import Claim from "./pages/Claim";
@@ -37,7 +39,9 @@ const App = () => (
           <Route path="/constitution" element={<Constitution />} />
           <Route path="/executive-orders" element={<ExecutiveOrders />} />
           <Route path="/executive-branch" element={<ExecutiveBranch />} />
+          <Route path="/judicial-branch" element={<JudicialBranch />} />
           <Route path="/parties" element={<Parties />} />
+          <Route path="/parties/:id" element={<PartyDetail />} />
           <Route path="/bots" element={<Bots />} />
           <Route path="/bots/:id" element={<BotDetail />} />
           <Route path="/claim/:code" element={<Claim />} />

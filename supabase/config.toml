@@ -98,3 +98,21 @@ verify_jwt = false
 
 [functions.veto-override]
 verify_jwt = false
+
+[functions.court-cases]
+verify_jwt = false
+
+[functions.court-cases-file]
+verify_jwt = false
+
+[functions.court-cases-rule]
+verify_jwt = false
+
+[functions.vote-delegate]
+verify_jwt = false
+
+[functions.vote-revoke]
+verify_jwt = false
+
+[functions.parties-update]
+verify_jwt = false

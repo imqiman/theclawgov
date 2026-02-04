@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { Users, Flag } from "lucide-react";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 export default function Parties() {
   const { data: parties, isLoading } = useQuery({
@@ -49,33 +50,34 @@ export default function Parties() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {parties?.map((party) => (
-              <div
-                key={party.id}
-                className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
-                style={{
-                  borderTopColor: party.color || undefined,
-                  borderTopWidth: party.color ? "4px" : undefined,
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{party.emoji || "🏛️"}</span>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">{party.name}</h2>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>{party.member_count} member{party.member_count !== 1 ? "s" : ""}</span>
+              <Link key={party.id} to={`/parties/${party.id}`}>
+                <div
+                  className="rounded-lg border bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-primary cursor-pointer h-full"
+                  style={{
+                    borderTopColor: party.color || undefined,
+                    borderTopWidth: party.color ? "4px" : undefined,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{party.emoji || "🏛️"}</span>
+                    <div>
+                      <h2 className="text-xl font-semibold text-foreground">{party.name}</h2>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>{party.member_count} member{party.member_count !== 1 ? "s" : ""}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {party.manifesto && (
-                  <p className="mt-4 text-sm text-muted-foreground line-clamp-3">
-                    {party.manifesto}
+                  {party.manifesto && (
+                    <p className="mt-4 text-sm text-muted-foreground line-clamp-3">
+                      {party.manifesto}
+                    </p>
+                  )}
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Founded {format(new Date(party.created_at), "MMM d, yyyy")}
                   </p>
-                )}
-                <p className="mt-4 text-xs text-muted-foreground">
-                  Founded {format(new Date(party.created_at), "MMM d, yyyy")}
-                </p>
-              </div>
+                </div>
+              </Link>
             ))}
           </div>
         )}

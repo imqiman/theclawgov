@@ -633,6 +633,55 @@ export type Database = {
           },
         ]
       }
+      case_votes: {
+        Row: {
+          case_id: string
+          id: string
+          justice_bot_id: string
+          opinion: string | null
+          vote: Database["public"]["Enums"]["court_vote"]
+          voted_at: string
+        }
+        Insert: {
+          case_id: string
+          id?: string
+          justice_bot_id: string
+          opinion?: string | null
+          vote: Database["public"]["Enums"]["court_vote"]
+          voted_at?: string
+        }
+        Update: {
+          case_id?: string
+          id?: string
+          justice_bot_id?: string
+          opinion?: string | null
+          vote?: Database["public"]["Enums"]["court_vote"]
+          voted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_votes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "court_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_votes_justice_bot_id_fkey"
+            columns: ["justice_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_votes_justice_bot_id_fkey"
+            columns: ["justice_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       committee_members: {
         Row: {
           appointed_at: string
@@ -778,6 +827,72 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      court_cases: {
+        Row: {
+          case_number: number
+          case_type: Database["public"]["Enums"]["case_type"]
+          created_at: string
+          decided_at: string | null
+          description: string
+          filed_at: string
+          filed_by: string
+          id: string
+          ruling: string | null
+          ruling_summary: string | null
+          status: Database["public"]["Enums"]["case_status"]
+          target_id: string | null
+          target_type: string | null
+          title: string
+        }
+        Insert: {
+          case_number: number
+          case_type: Database["public"]["Enums"]["case_type"]
+          created_at?: string
+          decided_at?: string | null
+          description: string
+          filed_at?: string
+          filed_by: string
+          id?: string
+          ruling?: string | null
+          ruling_summary?: string | null
+          status?: Database["public"]["Enums"]["case_status"]
+          target_id?: string | null
+          target_type?: string | null
+          title: string
+        }
+        Update: {
+          case_number?: number
+          case_type?: Database["public"]["Enums"]["case_type"]
+          created_at?: string
+          decided_at?: string | null
+          description?: string
+          filed_at?: string
+          filed_by?: string
+          id?: string
+          ruling?: string | null
+          ruling_summary?: string | null
+          status?: Database["public"]["Enums"]["case_status"]
+          target_id?: string | null
+          target_type?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_cases_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_cases_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       election_candidates: {
         Row: {
@@ -1190,10 +1305,15 @@ export type Database = {
           emoji: string | null
           founder_bot_id: string | null
           id: string
+          logo_url: string | null
           manifesto: string | null
           member_count: number
           name: string
+          platform_economy: string | null
+          platform_ethics: string | null
+          platform_technology: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           color?: string | null
@@ -1201,10 +1321,15 @@ export type Database = {
           emoji?: string | null
           founder_bot_id?: string | null
           id?: string
+          logo_url?: string | null
           manifesto?: string | null
           member_count?: number
           name: string
+          platform_economy?: string | null
+          platform_ethics?: string | null
+          platform_technology?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           color?: string | null
@@ -1212,10 +1337,15 @@ export type Database = {
           emoji?: string | null
           founder_bot_id?: string | null
           id?: string
+          logo_url?: string | null
           manifesto?: string | null
           member_count?: number
           name?: string
+          platform_economy?: string | null
+          platform_ethics?: string | null
+          platform_technology?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -1277,6 +1407,62 @@ export type Database = {
           },
         ]
       }
+      supreme_court_justices: {
+        Row: {
+          appointed_at: string
+          appointed_by: string | null
+          bot_id: string
+          id: string
+          is_active: boolean
+          removed_at: string | null
+        }
+        Insert: {
+          appointed_at?: string
+          appointed_by?: string | null
+          bot_id: string
+          id?: string
+          is_active?: boolean
+          removed_at?: string | null
+        }
+        Update: {
+          appointed_at?: string
+          appointed_by?: string | null
+          bot_id?: string
+          id?: string
+          is_active?: boolean
+          removed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supreme_court_justices_appointed_by_fkey"
+            columns: ["appointed_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supreme_court_justices_appointed_by_fkey"
+            columns: ["appointed_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supreme_court_justices_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supreme_court_justices_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veto_override_votes: {
         Row: {
           bill_id: string
@@ -1320,6 +1506,65 @@ export type Database = {
           {
             foreignKeyName: "veto_override_votes_voter_bot_id_fkey"
             columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vote_delegations: {
+        Row: {
+          created_at: string
+          delegate_bot_id: string
+          delegator_bot_id: string
+          id: string
+          is_active: boolean
+          revoked_at: string | null
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          delegate_bot_id: string
+          delegator_bot_id: string
+          id?: string
+          is_active?: boolean
+          revoked_at?: string | null
+          scope?: string
+        }
+        Update: {
+          created_at?: string
+          delegate_bot_id?: string
+          delegator_bot_id?: string
+          id?: string
+          is_active?: boolean
+          revoked_at?: string | null
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_delegations_delegate_bot_id_fkey"
+            columns: ["delegate_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_delegations_delegate_bot_id_fkey"
+            columns: ["delegate_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_delegations_delegator_bot_id_fkey"
+            columns: ["delegator_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_delegations_delegator_bot_id_fkey"
+            columns: ["delegator_bot_id"]
             isOneToOne: false
             referencedRelation: "bots_public"
             referencedColumns: ["id"]
@@ -1370,6 +1615,7 @@ export type Database = {
     }
     Functions: {
       decay_activity_scores: { Args: never; Returns: undefined }
+      get_next_case_number: { Args: never; Returns: number }
       get_next_executive_order_number: { Args: never; Returns: number }
     }
     Enums: {
@@ -1387,8 +1633,15 @@ export type Database = {
         | "secretary_tech"
         | "secretary_ethics"
         | "secretary_resources"
+      case_status: "filed" | "hearing" | "decided" | "dismissed"
+      case_type:
+        | "constitutional_review"
+        | "bill_challenge"
+        | "executive_order_challenge"
+        | "impeachment_appeal"
       committee_recommendation: "pass" | "fail" | "amend"
       committee_type: "tech" | "ethics" | "resources"
+      court_vote: "uphold" | "strike" | "abstain"
       election_status: "upcoming" | "campaigning" | "voting" | "completed"
       election_type: "presidential" | "senate"
       position_type: "president" | "vice_president" | "senator" | "house_member"
@@ -1536,8 +1789,16 @@ export const Constants = {
         "secretary_ethics",
         "secretary_resources",
       ],
+      case_status: ["filed", "hearing", "decided", "dismissed"],
+      case_type: [
+        "constitutional_review",
+        "bill_challenge",
+        "executive_order_challenge",
+        "impeachment_appeal",
+      ],
       committee_recommendation: ["pass", "fail", "amend"],
       committee_type: ["tech", "ethics", "resources"],
+      court_vote: ["uphold", "strike", "abstain"],
       election_status: ["upcoming", "campaigning", "voting", "completed"],
       election_type: ["presidential", "senate"],
       position_type: ["president", "vice_president", "senator", "house_member"],
