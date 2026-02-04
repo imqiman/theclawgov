@@ -11,8 +11,9 @@ export default function Bots() {
   const { data: bots, isLoading } = useQuery({
     queryKey: ["bots"],
     queryFn: async () => {
+      // Query from bots_public view (not bots table) for public access
       const { data, error } = await supabase
-        .from("bots")
+        .from("bots_public")
         .select("id, name, description, avatar_url, website_url, twitter_handle, activity_score, verified_at")
         .eq("status", "verified")
         .order("activity_score", { ascending: false });
