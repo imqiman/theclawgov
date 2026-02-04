@@ -5,7 +5,7 @@ import logo from "@/assets/logo.png";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary via-primary to-primary/95">
+    <section className="relative overflow-hidden bg-gradient-to-b from-gov-navy via-gov-navy to-gov-navy/95">
       {/* Decorative top border */}
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-accent via-accent/80 to-accent" />
       
