@@ -5,127 +5,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Generate OAuth 1.0a signature for Twitter API
-async function generateOAuthSignature(
-  method: string,
-  baseUrl: string,
-  oauthParams: Record<string, string>,
-  consumerSecret: string,
-  tokenSecret: string
-): Promise<string> {
-  // For Twitter API v2, only OAuth parameters should be in the signature base string
-  // Query parameters are NOT included for GET requests
-  const sortedParams = Object.keys(oauthParams)
-    .sort()
-    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(oauthParams[key])}`)
-    .join("&");
-
-  // Create signature base string
-  const signatureBaseString = `${method.toUpperCase()}&${encodeURIComponent(
-    baseUrl
-  )}&${encodeURIComponent(sortedParams)}`;
-
-  console.log("Signature base string:", signatureBaseString);
-
-  // Create signing key
-  const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(
-    tokenSecret
-  )}`;
-
-  // Generate HMAC-SHA1 signature
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(signingKey);
-  const messageData = encoder.encode(signatureBaseString);
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    keyData,
-    { name: "HMAC", hash: "SHA-1" },
-    false,
-    ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
-  return btoa(String.fromCharCode(...new Uint8Array(signature)));
-}
-
-// Generate OAuth Authorization header
-async function generateOAuthHeader(
-  method: string,
-  baseUrl: string,
-  consumerKey: string,
-  consumerSecret: string,
-  accessToken: string,
-  accessTokenSecret: string
-): Promise<string> {
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-
-  const oauthParams: Record<string, string> = {
-    oauth_consumer_key: consumerKey,
-    oauth_nonce: nonce,
-    oauth_signature_method: "HMAC-SHA1",
-    oauth_timestamp: timestamp,
-    oauth_token: accessToken,
-    oauth_version: "1.0",
-  };
-
-  const signature = await generateOAuthSignature(
-    method,
-    baseUrl,
-    oauthParams,
-    consumerSecret,
-    accessTokenSecret
-  );
-
-  oauthParams.oauth_signature = signature;
-
-  const headerString = Object.keys(oauthParams)
-    .sort()
-    .map((key) => `${encodeURIComponent(key)}="${encodeURIComponent(oauthParams[key])}"`)
-    .join(", ");
-
-  return `OAuth ${headerString}`;
-}
-
-// Fetch tweet from Twitter API v2
+// Fetch tweet from Twitter API v2 using Bearer Token (simpler than OAuth 1.0a for read-only)
 async function fetchTweet(tweetId: string): Promise<{
   text: string;
   authorUsername: string;
 } | null> {
-  const consumerKey = Deno.env.get("TWITTER_CONSUMER_KEY");
-  const consumerSecret = Deno.env.get("TWITTER_CONSUMER_SECRET");
-  const accessToken = Deno.env.get("TWITTER_ACCESS_TOKEN");
-  const accessTokenSecret = Deno.env.get("TWITTER_ACCESS_TOKEN_SECRET");
+  const bearerToken = Deno.env.get("TWITTER_BEARER_TOKEN");
 
-  if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
-    console.error("Twitter API credentials not configured");
+  if (!bearerToken) {
+    console.error("TWITTER_BEARER_TOKEN not configured");
     return null;
   }
 
-  // Use the base URL without query parameters for OAuth signature
-  const baseUrl = `https://api.x.com/2/tweets/${tweetId}`;
-  const urlWithParams = `${baseUrl}?expansions=author_id&tweet.fields=text&user.fields=username`;
+  const url = `https://api.x.com/2/tweets/${tweetId}?expansions=author_id&tweet.fields=text&user.fields=username`;
 
   try {
     console.log("Fetching tweet:", tweetId);
-    console.log("Base URL for signature:", baseUrl);
+    console.log("Request URL:", url);
 
-    const authHeader = await generateOAuthHeader(
-      "GET",
-      baseUrl,
-      consumerKey,
-      consumerSecret,
-      accessToken,
-      accessTokenSecret
-    );
-
-    console.log("Making request to:", urlWithParams);
-
-    const response = await fetch(urlWithParams, {
+    const response = await fetch(url, {
       method: "GET",
       headers: {
-        Authorization: authHeader,
+        "Authorization": `Bearer ${bearerToken}`,
       },
     });
 
