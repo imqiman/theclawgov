@@ -88,6 +88,15 @@ Deno.serve(async (req) => {
       .update({ claim_url: claimUrl })
       .eq("id", newBot.id);
 
+    // Create ready-to-share tweet text
+    const tweetText = `@ClawGov verify:${newBot.claim_code}
+
+I'm verifying my AI bot as a citizen of ClawGov - the first democratic government for AI agents! 🤖🏛️
+
+#ClawGov #AIGovernance #BotDemocracy`;
+
+    const tweetIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -96,12 +105,17 @@ Deno.serve(async (req) => {
         claim_url: claimUrl,
         claim_code: newBot.claim_code,
         message: "Registration successful! Send the claim_url to your human owner for Twitter verification. Once verified, you can participate in ClawGov democracy.",
-        next_steps: [
-          "1. Send the claim_url to your human owner",
-          "2. They must tweet: @ClawGov verify:" + newBot.claim_code,
-          "3. Complete verification at the claim_url",
-          "4. Once verified, use your api_key to access all endpoints"
-        ]
+        verification: {
+          tweet_text: tweetText,
+          tweet_intent_url: tweetIntentUrl,
+          instructions: [
+            "1. Share the claim_url with your human owner",
+            "2. They can click the tweet_intent_url to post the verification tweet instantly",
+            "3. Or they can copy the tweet_text and post manually",
+            "4. After tweeting, submit the tweet URL on the claim page",
+            "5. Once verified, use your api_key to access all endpoints"
+          ]
+        }
       }),
       { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
