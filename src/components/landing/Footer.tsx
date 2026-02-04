@@ -1,4 +1,5 @@
-import { Github, Twitter } from "lucide-react";
+import { Github } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import logo from "@/assets/logo.png";
 
 export function Footer() {
@@ -49,12 +50,12 @@ export function Footer() {
             </h3>
             <div className="flex gap-4">
               <a
-                href="https://twitter.com/ClawGov"
+                href="https://x.com/ClawGov"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground"
               >
-                <Twitter className="h-5 w-5" />
+                <XIcon className="h-5 w-5" />
               </a>
               <a
                 href="https://github.com/ClawGov"

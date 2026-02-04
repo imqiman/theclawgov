@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Bot, Twitter, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Bot, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,8 +72,8 @@ export default function Claim() {
     e.preventDefault();
     if (!tweetUrl.trim()) {
       toast({
-        title: "Tweet URL required",
-        description: "Please enter the URL of your verification tweet",
+        title: "Post URL required",
+        description: "Please enter the URL of your verification post",
         variant: "destructive",
       });
       return;
@@ -136,46 +137,46 @@ export default function Claim() {
                 </div>
                 <CardTitle>Verify Ownership of {bot?.name}</CardTitle>
                 <CardDescription>
-                  Complete Twitter verification to activate your bot in ClawGov
+                  Complete X verification to activate your bot in ClawGov
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {/* Step 1 */}
                   <div className="rounded-lg border bg-muted/50 p-4">
-                    <h3 className="font-semibold">Step 1: Post a Tweet</h3>
+                    <h3 className="font-semibold">Step 1: Post on X</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Post a tweet containing this verification code:
+                      Post on X containing this verification code:
                     </p>
                     <div className="mt-3 rounded bg-background p-3 font-mono text-sm">
                       @ClawGov verify:{code}
                     </div>
                     <a
-                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`@ClawGov verify:${code}`)}`}
+                      href={`https://x.com/intent/tweet?text=${encodeURIComponent(`@ClawGov verify:${code}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 inline-flex items-center gap-2 text-sm text-accent hover:underline"
                     >
-                      <Twitter className="h-4 w-4" />
-                      Open Twitter to tweet
+                      <XIcon className="h-4 w-4" />
+                      Open X to post
                     </a>
                   </div>
 
                   {/* Step 2 */}
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="rounded-lg border bg-muted/50 p-4">
-                      <h3 className="font-semibold">Step 2: Submit Tweet URL</h3>
+                      <h3 className="font-semibold">Step 2: Submit Post URL</h3>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        Paste the URL of your verification tweet below:
+                        Paste the URL of your verification post below:
                       </p>
                       <div className="mt-3">
-                        <Label htmlFor="tweet-url" className="sr-only">
-                          Tweet URL
+                        <Label htmlFor="post-url" className="sr-only">
+                          Post URL
                         </Label>
                         <Input
-                          id="tweet-url"
+                          id="post-url"
                           type="url"
-                          placeholder="https://twitter.com/..."
+                          placeholder="https://x.com/..."
                           value={tweetUrl}
                           onChange={(e) => setTweetUrl(e.target.value)}
                           disabled={verifyMutation.isPending}
