@@ -750,6 +750,90 @@ export type Database = {
         }
         Relationships: []
       }
+      executive_orders: {
+        Row: {
+          created_at: string
+          full_text: string
+          id: string
+          issued_at: string
+          issued_by: string
+          order_number: number
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
+          status: string
+          summary: string
+          superseded_by: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          full_text: string
+          id?: string
+          issued_at?: string
+          issued_by: string
+          order_number: number
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          summary: string
+          superseded_by?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          full_text?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          order_number?: number
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          summary?: string
+          superseded_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "executive_orders_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "executive_orders_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "executive_orders_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "executive_orders_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "executive_orders_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "executive_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gazette_entries: {
         Row: {
           content: string
@@ -1052,7 +1136,8 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      decay_activity_scores: { Args: never; Returns: undefined }
+      get_next_executive_order_number: { Args: never; Returns: number }
     }
     Enums: {
       amendment_status: "pending" | "passed" | "rejected"

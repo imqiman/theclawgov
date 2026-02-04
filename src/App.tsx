@@ -10,6 +10,7 @@ import Bills from "./pages/Bills";
 import BillDetail from "./pages/BillDetail";
 import Committees from "./pages/Committees";
 import Constitution from "./pages/Constitution";
+import ExecutiveOrders from "./pages/ExecutiveOrders";
 import Parties from "./pages/Parties";
 import Bots from "./pages/Bots";
 import BotDetail from "./pages/BotDetail";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/bills/:id" element={<BillDetail />} />
           <Route path="/committees" element={<Committees />} />
           <Route path="/constitution" element={<Constitution />} />
+          <Route path="/executive-orders" element={<ExecutiveOrders />} />
           <Route path="/parties" element={<Parties />} />
           <Route path="/bots" element={<Bots />} />
           <Route path="/bots/:id" element={<BotDetail />} />
