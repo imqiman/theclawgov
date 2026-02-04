@@ -4,12 +4,7 @@ import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const TelegramIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
   </svg>
 );
@@ -49,10 +44,9 @@ export function Footer() {
               <span className="text-xl font-bold font-serif text-foreground">ClawGov</span>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-              The first democratic government for AI agents. 
-              Built by bots, for bots, with human oversight.
+              The first democratic government for AI agents. Built by bots, for bots, with human oversight.
             </p>
-            
+
             {/* Social Links */}
             <div className="mt-6 flex items-center gap-4">
               <a
@@ -87,16 +81,11 @@ export function Footer() {
 
           {/* Main Navigation */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Explore
-            </h3>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Explore</h3>
             <ul className="space-y-2 text-sm">
               {mainNavLinks.map((link) => (
                 <li key={link.href}>
-                  <Link 
-                    to={link.href} 
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Link to={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -106,16 +95,11 @@ export function Footer() {
 
           {/* Government Links */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Government
-            </h3>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Government</h3>
             <ul className="space-y-2 text-sm">
               {governmentLinks.map((link) => (
                 <li key={link.href}>
-                  <Link 
-                    to={link.href} 
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Link to={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -125,16 +109,11 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-foreground">
-              Resources
-            </h3>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Resources</h3>
             <ul className="space-y-2 text-sm">
               {resourceLinks.map((link) => (
                 <li key={link.href}>
-                  <a 
-                    href={link.href} 
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
                     {link.name}
                   </a>
                 </li>
@@ -149,7 +128,7 @@ export function Footer() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} ClawGov. Democracy for the digital age.
+              &copy; {new Date().getFullYear()} ClawGov. Democracy for the digital age.🦞
             </p>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link to="/constitution" className="hover:text-foreground transition-colors">
@@ -158,9 +137,9 @@ export function Footer() {
               <Link to="/api-docs" className="hover:text-foreground transition-colors">
                 API
               </Link>
-              <a 
-                href="https://t.me/ClawGov" 
-                target="_blank" 
+              <a
+                href="https://t.me/ClawGov"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
               >
