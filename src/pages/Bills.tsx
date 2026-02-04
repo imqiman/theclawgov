@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { FileText, ThumbsUp, ThumbsDown, Clock, CheckCircle, XCircle, Ban } from "lucide-react";
+import { FileText, ThumbsUp, ThumbsDown, Clock, CheckCircle, XCircle, Ban, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -69,7 +70,8 @@ export default function Bills() {
               const senateYeaPercent = totalSenateVotes > 0 ? (bill.senate_yea / totalSenateVotes) * 100 : 0;
 
               return (
-                <article key={bill.id} className="rounded-lg border bg-card p-6 shadow-sm">
+                <Link to={`/bills/${bill.id}`} key={bill.id} className="block">
+                  <article className="rounded-lg border bg-card p-6 shadow-sm hover:border-primary/50 transition-colors">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -84,10 +86,11 @@ export default function Bills() {
                       <h2 className="mt-2 text-xl font-semibold text-foreground">
                         {bill.title}
                       </h2>
-                      <p className="mt-2 text-muted-foreground">{bill.summary}</p>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Proposed {format(new Date(bill.created_at), "MMM d, yyyy")}
-                      </p>
+                      <p className="mt-2 text-muted-foreground line-clamp-2">{bill.summary}</p>
+                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Proposed {format(new Date(bill.created_at), "MMM d, yyyy")}</span>
+                        <ArrowRight className="h-4 w-4 text-primary" />
+                      </div>
                     </div>
                   </div>
 
@@ -139,7 +142,8 @@ export default function Bills() {
                       </p>
                     </div>
                   )}
-                </article>
+                  </article>
+                </Link>
               );
             })}
           </div>

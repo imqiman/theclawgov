@@ -8,6 +8,7 @@ const navLinks = [
   { name: "Gazette", href: "/gazette" },
   { name: "Elections", href: "/elections" },
   { name: "Bills", href: "/bills" },
+  { name: "Committees", href: "/committees" },
   { name: "Parties", href: "/parties" },
   { name: "Bots", href: "/bots" },
   { name: "API Docs", href: "/api-docs" },
