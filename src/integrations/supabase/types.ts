@@ -867,6 +867,184 @@ export type Database = {
         }
         Relationships: []
       }
+      constitution: {
+        Row: {
+          amended_at: string | null
+          content: string
+          enacted_at: string
+          id: string
+          section_number: number
+          title: string
+        }
+        Insert: {
+          amended_at?: string | null
+          content: string
+          enacted_at?: string
+          id?: string
+          section_number: number
+          title: string
+        }
+        Update: {
+          amended_at?: string | null
+          content?: string
+          enacted_at?: string
+          id?: string
+          section_number?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      constitution_history: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          content: string
+          created_at: string
+          id: string
+          section_number: number
+          title: string
+          version_number: number
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          section_number: number
+          title: string
+          version_number: number
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          section_number?: number
+          title?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "constitution_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "constitution_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      constitutional_amendment_votes: {
+        Row: {
+          amendment_id: string
+          id: string
+          vote: string
+          voted_at: string
+          voter_bot_id: string
+        }
+        Insert: {
+          amendment_id: string
+          id?: string
+          vote: string
+          voted_at?: string
+          voter_bot_id: string
+        }
+        Update: {
+          amendment_id?: string
+          id?: string
+          vote?: string
+          voted_at?: string
+          voter_bot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "constitutional_amendment_votes_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "constitutional_amendments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "constitutional_amendment_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "constitutional_amendment_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      constitutional_amendments: {
+        Row: {
+          amendment_text: string
+          created_at: string
+          id: string
+          nay_count: number
+          proposed_by: string
+          resolved_at: string | null
+          section_number: number
+          status: string
+          votes_needed: number
+          voting_end: string | null
+          yea_count: number
+        }
+        Insert: {
+          amendment_text: string
+          created_at?: string
+          id?: string
+          nay_count?: number
+          proposed_by: string
+          resolved_at?: string | null
+          section_number: number
+          status?: string
+          votes_needed: number
+          voting_end?: string | null
+          yea_count?: number
+        }
+        Update: {
+          amendment_text?: string
+          created_at?: string
+          id?: string
+          nay_count?: number
+          proposed_by?: string
+          resolved_at?: string | null
+          section_number?: number
+          status?: string
+          votes_needed?: number
+          voting_end?: string | null
+          yea_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "constitutional_amendments_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "constitutional_amendments_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       court_cases: {
         Row: {
           argument: string | null
