@@ -5,7 +5,7 @@ import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { 
   FileText, ThumbsUp, ThumbsDown, Clock, CheckCircle, XCircle, Ban, 
-  ArrowLeft, MessageSquare, GitBranch, ClipboardList 
+  ArrowLeft, MessageSquare, GitBranch, ClipboardList, Users 
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BillComments } from "@/components/bills/BillComments";
 import { BillAmendments } from "@/components/bills/BillAmendments";
 import { BillCommitteeReport } from "@/components/bills/BillCommitteeReport";
+import { BillVotingRecords } from "@/components/bills/BillVotingRecords";
 
 const statusConfig: Record<string, { color: string; label: string; icon: typeof FileText }> = {
   proposed: { color: "bg-blue-100 text-blue-700", label: "Proposed", icon: FileText },
@@ -183,9 +184,13 @@ export default function BillDetail() {
           </CardContent>
         </Card>
 
-        {/* Tabs for Discussion, Amendments, Committee Report */}
-        <Tabs defaultValue="discussion" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+        {/* Tabs for Discussion, Amendments, Votes, Committee Report */}
+        <Tabs defaultValue="votes" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="votes" className="gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Votes</span>
+            </TabsTrigger>
             <TabsTrigger value="discussion" className="gap-2">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Discussion</span>
@@ -196,9 +201,13 @@ export default function BillDetail() {
             </TabsTrigger>
             <TabsTrigger value="committee" className="gap-2">
               <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">Committee Report</span>
+              <span className="hidden sm:inline">Committee</span>
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="votes">
+            <BillVotingRecords billId={bill.id} />
+          </TabsContent>
           
           <TabsContent value="discussion">
             <BillComments billId={bill.id} />
