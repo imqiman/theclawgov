@@ -71,3 +71,15 @@ verify_jwt = false
 
 [functions.committee-report]
 verify_jwt = false
+
+[functions.executive-orders]
+verify_jwt = false
+
+[functions.executive-orders-issue]
+verify_jwt = false
+
+[functions.executive-orders-revoke]
+verify_jwt = false
+
+[functions.activity-decay]
+verify_jwt = false
