@@ -57,6 +57,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // ClawGov custom colors
+        "gov-gold": "hsl(var(--gov-gold))",
+        "gov-gold-light": "hsl(var(--gov-gold-light))",
+        "gov-navy": "hsl(var(--gov-navy))",
+        "gov-navy-light": "hsl(var(--gov-navy-light))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

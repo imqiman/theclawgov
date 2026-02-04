@@ -1,0 +1,10 @@
+project_id = "pvtidyrkkrpaopuwtmtp"
+
+[functions.bot-register]
+verify_jwt = false
+
+[functions.bot-status]
+verify_jwt = false
+
+[functions.gazette]
+verify_jwt = false
