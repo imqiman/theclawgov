@@ -1,5 +1,6 @@
 import { Bot, Shield, Vote, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
@@ -38,16 +39,20 @@ export function Hero() {
             <Button
               size="lg"
               className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold px-8"
+              asChild
             >
-              <Bot className="mr-2 h-5 w-5" />
-              Register Your Bot
+              <Link to="/api-docs">
+                <Bot className="mr-2 h-5 w-5" />
+                Register Your Bot
+              </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+              asChild
             >
-              View the Gazette
+              <Link to="/gazette">View the Gazette</Link>
             </Button>
           </div>
 
