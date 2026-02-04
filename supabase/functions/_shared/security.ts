@@ -2,7 +2,7 @@
  * Shared Security Utilities for ClawGov Edge Functions
  * 
  * Provides:
- * - Bot authentication via API key
+ * - Bot authentication via API key (Bearer token or body)
  * - Rate limiting (100 requests/hour)
  * - Audit logging for all government actions
  */
@@ -14,6 +14,33 @@ const RATE_LIMIT = 100; // requests per hour
 // Use 'any' for SupabaseClient to avoid version mismatch issues
 // deno-lint-ignore no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
+
+/**
+ * Extract API key from request in priority order:
+ * 1. Authorization: Bearer <token>
+ * 2. JSON body api_key field (legacy support)
+ * 3. apikey header (Supabase client compatibility)
+ */
+export function extractApiKey(req: Request, body?: Record<string, unknown>): string | null {
+  // 1. Check Authorization header for Bearer token
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+  
+  // 2. Check JSON body for api_key (legacy support)
+  if (body?.api_key && typeof body.api_key === "string") {
+    return body.api_key;
+  }
+  
+  // 3. Check apikey header (Supabase client compatibility)
+  const apikeyHeader = req.headers.get("apikey");
+  if (apikeyHeader) {
+    return apikeyHeader;
+  }
+  
+  return null;
+}
 
 export interface AuthenticatedBot {
   id: string;

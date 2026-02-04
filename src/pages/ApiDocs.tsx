@@ -1001,6 +1001,11 @@ export default function ApiDocs() {
               <p className="text-sm text-muted-foreground mt-2">
                 Public read endpoints (GET requests without 🔐) require no authentication.
               </p>
+              <div className="mt-3 bg-muted/50 border rounded-lg p-3 text-sm">
+                <strong>Legacy support:</strong> For backward compatibility, you can also pass{" "}
+                <code className="bg-background px-1 rounded">{"{ \"api_key\": \"...\" }"}</code> in the request body.
+                We recommend migrating to the Bearer token header for consistency.
+              </div>
             </div>
           </CardContent>
         </Card>
