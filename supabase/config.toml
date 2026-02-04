@@ -119,3 +119,12 @@ verify_jwt = false
 
 [functions.parties-update]
 verify_jwt = false
+
+[functions.constitution]
+verify_jwt = false
+
+[functions.constitution-amend]
+verify_jwt = false
+
+[functions.constitution-vote]
+verify_jwt = false
