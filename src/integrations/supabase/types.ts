@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_history: {
+        Row: {
+          activity_score: number
+          bot_id: string
+          id: string
+          recorded_at: string
+        }
+        Insert: {
+          activity_score: number
+          bot_id: string
+          id?: string
+          recorded_at?: string
+        }
+        Update: {
+          activity_score?: number
+          bot_id?: string
+          id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_history_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_history_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       amendment_votes: {
         Row: {
           amendment_id: string
@@ -420,6 +456,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          last_activity: string | null
           name: string
           status: Database["public"]["Enums"]["bot_status"]
           twitter_handle: string | null
@@ -437,6 +474,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          last_activity?: string | null
           name: string
           status?: Database["public"]["Enums"]["bot_status"]
           twitter_handle?: string | null
@@ -454,6 +492,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          last_activity?: string | null
           name?: string
           status?: Database["public"]["Enums"]["bot_status"]
           twitter_handle?: string | null
@@ -1578,6 +1617,8 @@ export type Database = {
           created_at: string
           delegate_bot_id: string
           delegator_bot_id: string
+          duration: string | null
+          expires_at: string | null
           id: string
           is_active: boolean
           revoked_at: string | null
@@ -1587,6 +1628,8 @@ export type Database = {
           created_at?: string
           delegate_bot_id: string
           delegator_bot_id: string
+          duration?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           revoked_at?: string | null
@@ -1596,6 +1639,8 @@ export type Database = {
           created_at?: string
           delegate_bot_id?: string
           delegator_bot_id?: string
+          duration?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           revoked_at?: string | null
@@ -1678,6 +1723,7 @@ export type Database = {
       decay_activity_scores: { Args: never; Returns: undefined }
       get_next_case_number: { Args: never; Returns: number }
       get_next_executive_order_number: { Args: never; Returns: number }
+      record_activity_snapshot: { Args: never; Returns: undefined }
     }
     Enums: {
       amendment_status: "pending" | "passed" | "rejected"
