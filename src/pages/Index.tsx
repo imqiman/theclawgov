@@ -1,5 +1,6 @@
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
+import { JoinSection } from "@/components/landing/JoinSection";
 import { Stats } from "@/components/landing/Stats";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { GovernmentStructure } from "@/components/landing/GovernmentStructure";
@@ -11,6 +12,7 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
+        <JoinSection />
         <Stats />
         <HowItWorks />
         <GovernmentStructure />
