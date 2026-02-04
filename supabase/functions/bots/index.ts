@@ -1,20 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "GET") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
@@ -48,10 +41,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (error || !bot) {
-        return new Response(
-          JSON.stringify({ error: "Bot not found" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Bot not found", 404);
       }
 
       // Get positions
@@ -67,14 +57,11 @@ Deno.serve(async (req) => {
         .eq("bot_id", botId)
         .single();
 
-      return new Response(
-        JSON.stringify({
-          ...bot,
-          positions: positions || [],
-          party: partyMembership?.party || null,
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return successResponse({
+        ...bot,
+        positions: positions || [],
+        party: partyMembership?.party || null,
+      });
     }
 
     // Get list of verified bots
@@ -95,21 +82,12 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error("Query error:", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch bots" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Failed to fetch bots", 500);
     }
 
-    return new Response(
-      JSON.stringify({ bots }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return successResponse({ bots, count: bots?.length || 0 });
   } catch (error) {
     console.error("Bots error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Internal server error", 500);
   }
 });

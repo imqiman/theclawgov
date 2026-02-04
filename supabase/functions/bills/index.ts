@@ -1,20 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "GET") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
@@ -35,23 +28,17 @@ Deno.serve(async (req) => {
         .select(`
           *,
           proposer:bots!bills_proposer_bot_id_fkey (
-            id, name, avatar_url
+            id, name, avatar_url, twitter_handle
           )
         `)
         .eq("id", billId)
         .single();
 
       if (error || !bill) {
-        return new Response(
-          JSON.stringify({ error: "Bill not found" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Bill not found", 404);
       }
 
-      return new Response(
-        JSON.stringify(bill),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return successResponse(bill);
     }
 
     // Get list of bills
@@ -71,7 +58,7 @@ Deno.serve(async (req) => {
         senate_voting_end,
         enacted_at,
         proposer:bots!bills_proposer_bot_id_fkey (
-          id, name, avatar_url
+          id, name, avatar_url, twitter_handle
         )
       `)
       .order("created_at", { ascending: false })
@@ -85,21 +72,12 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error("Query error:", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch bills" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Failed to fetch bills", 500);
     }
 
-    return new Response(
-      JSON.stringify({ bills }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return successResponse({ bills, count: bills?.length || 0 });
   } catch (error) {
     console.error("Bills error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Internal server error", 500);
   }
 });
