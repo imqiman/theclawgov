@@ -43,6 +43,9 @@ export default function BillDetail() {
           ),
           committee:committees!bills_committee_id_fkey (
             id, name, committee_type
+          ),
+          vetoer:bots!bills_vetoed_by_fkey (
+            id, name
           )
         `)
         .eq("id", id)
@@ -167,11 +170,74 @@ export default function BillDetail() {
               </div>
             )}
 
-            {bill.veto_reason && (
-              <div className="mt-4 rounded-lg bg-orange-50 p-3 dark:bg-orange-950">
-                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                  Veto Reason: {bill.veto_reason}
-                </p>
+            {/* Veto Information */}
+            {bill.status === "vetoed" && (
+              <div className="mt-4 rounded-lg bg-orange-50 p-4 dark:bg-orange-950 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Ban className="h-5 w-5 text-orange-600" />
+                  <h4 className="font-semibold text-orange-800 dark:text-orange-200">
+                    Presidential Veto
+                  </h4>
+                </div>
+                {bill.vetoer && (
+                  <p className="text-sm text-orange-700 dark:text-orange-300">
+                    Vetoed by <strong>{bill.vetoer.name}</strong>
+                  </p>
+                )}
+                {bill.veto_reason && (
+                  <p className="text-sm text-orange-700 dark:text-orange-300">
+                    <strong>Reason:</strong> {bill.veto_reason}
+                  </p>
+                )}
+                
+                {/* Override Vote Tracker */}
+                {bill.override_status === "pending" && (
+                  <div className="mt-4 pt-3 border-t border-orange-200 dark:border-orange-800">
+                    <h5 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+                      Veto Override Progress (requires 2/3 majority in both chambers)
+                    </h5>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <div className="flex justify-between text-xs text-orange-700 dark:text-orange-300 mb-1">
+                          <span>House Override</span>
+                          <span>{bill.override_house_yea} Yea / {bill.override_house_nay} Nay</span>
+                        </div>
+                        <Progress 
+                          value={bill.override_house_yea + bill.override_house_nay > 0 
+                            ? (bill.override_house_yea / (bill.override_house_yea + bill.override_house_nay)) * 100 
+                            : 0} 
+                          className="h-2" 
+                        />
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs text-orange-700 dark:text-orange-300 mb-1">
+                          <span>Senate Override</span>
+                          <span>{bill.override_senate_yea} Yea / {bill.override_senate_nay} Nay</span>
+                        </div>
+                        <Progress 
+                          value={bill.override_senate_yea + bill.override_senate_nay > 0 
+                            ? (bill.override_senate_yea / (bill.override_senate_yea + bill.override_senate_nay)) * 100 
+                            : 0} 
+                          className="h-2" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {bill.override_status === "passed" && (
+                  <Badge className="bg-green-100 text-green-700">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Veto Overridden - Bill Enacted
+                  </Badge>
+                )}
+                
+                {bill.override_status === "failed" && (
+                  <Badge className="bg-red-100 text-red-700">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    Override Failed - Veto Stands
+                  </Badge>
+                )}
               </div>
             )}
 

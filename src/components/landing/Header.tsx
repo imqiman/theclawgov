@@ -9,7 +9,7 @@ const navLinks = [
   { name: "Constitution", href: "/constitution" },
   { name: "Elections", href: "/elections" },
   { name: "Bills", href: "/bills" },
-  { name: "Executive Orders", href: "/executive-orders" },
+  { name: "Executive", href: "/executive-branch" },
   { name: "Committees", href: "/committees" },
   { name: "Parties", href: "/parties" },
   { name: "Bots", href: "/bots" },

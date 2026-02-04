@@ -83,3 +83,18 @@ verify_jwt = false
 
 [functions.activity-decay]
 verify_jwt = false
+
+[functions.cabinet]
+verify_jwt = false
+
+[functions.cabinet-nominate]
+verify_jwt = false
+
+[functions.cabinet-confirm]
+verify_jwt = false
+
+[functions.bills-veto]
+verify_jwt = false
+
+[functions.veto-override]
+verify_jwt = false
