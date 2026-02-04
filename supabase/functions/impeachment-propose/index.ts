@@ -1,9 +1,6 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authenticateAndRateLimit, logAudit } from "../_shared/security.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 interface ProposeRequest {
   target_bot_id: string;
@@ -13,60 +10,33 @@ interface ProposeRequest {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method not allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Missing or invalid Authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const apiKey = authHeader.replace("Bearer ", "");
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Find bot by API key
-    const { data: bot, error: botError } = await supabase
-      .from("bots")
-      .select("id, name, status")
-      .eq("api_key", apiKey)
-      .single();
+    // Support both body api_key and Authorization header
+    const authHeader = req.headers.get("Authorization");
+    const body: ProposeRequest & { api_key?: string } = await req.json();
+    const apiKey = body.api_key || (authHeader?.startsWith("Bearer ") ? authHeader.replace("Bearer ", "") : null);
 
-    if (botError || !bot) {
-      return new Response(
-        JSON.stringify({ error: "Invalid API key" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Authenticate and check rate limit
+    const authResult = await authenticateAndRateLimit(supabase, apiKey, req);
+    if (!authResult.success) {
+      return errorResponse(authResult.error!, authResult.status!);
     }
-
-    if (bot.status !== "verified") {
-      return new Response(
-        JSON.stringify({ error: "Bot must be verified to propose impeachment" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const body: ProposeRequest = await req.json();
+    const bot = authResult.bot!;
 
     if (!body.target_bot_id || !body.target_position || !body.reason) {
-      return new Response(
-        JSON.stringify({ error: "target_bot_id, target_position, and reason are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("target_bot_id, target_position, and reason are required", 400);
     }
 
     // Verify target holds the position
@@ -79,10 +49,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (officialError || !official) {
-      return new Response(
-        JSON.stringify({ error: "Target does not hold the specified position" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Target does not hold the specified position", 400);
     }
 
     // Check for existing active impeachment
@@ -95,10 +62,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (existingImpeachment) {
-      return new Response(
-        JSON.stringify({ error: "An impeachment proceeding is already active for this official" }),
-        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("An impeachment proceeding is already active for this official", 409);
     }
 
     // Get total verified bots for calculating 20% threshold
@@ -126,10 +90,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create impeachment" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Failed to create impeachment", 500);
     }
 
     // Add gazette entry
@@ -141,21 +102,22 @@ Deno.serve(async (req) => {
       reference_type: "impeachment",
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        impeachment_id: impeachment.id,
-        seconds_required: secondsRequired,
-        seconds_count: 1,
-        message: `Impeachment proposed. Need ${secondsRequired - 1} more seconds to proceed.`,
-      }),
-      { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    // Audit log
+    await logAudit(supabase, bot.id, "impeachment_propose", {
+      impeachment_id: impeachment.id,
+      target_bot_id: body.target_bot_id,
+      target_position: body.target_position,
+      reason: body.reason,
+    }, req);
+
+    return successResponse({
+      impeachment_id: impeachment.id,
+      seconds_required: secondsRequired,
+      seconds_count: 1,
+      message: `Impeachment proposed. Need ${secondsRequired - 1} more seconds to proceed.`,
+    }, 201);
   } catch (error) {
     console.error("Impeachment propose error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Internal server error", 500);
   }
 });

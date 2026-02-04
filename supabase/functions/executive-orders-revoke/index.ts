@@ -1,21 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { authenticateAndRateLimit, logAudit } from "../_shared/security.ts";
+import { successResponse, errorResponse, corsResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
@@ -26,52 +19,19 @@ Deno.serve(async (req) => {
 
     const { api_key, order_id, reason } = await req.json();
 
-    if (!api_key) {
-      return new Response(JSON.stringify({ error: "API key required" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Authenticate and check rate limit
+    const authResult = await authenticateAndRateLimit(supabase, api_key, req);
+    if (!authResult.success) {
+      return errorResponse(authResult.error!, authResult.status!);
     }
+    const bot = authResult.bot!;
 
     if (!order_id) {
-      return new Response(JSON.stringify({ error: "order_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("order_id is required", 400);
     }
 
     if (!reason) {
-      return new Response(
-        JSON.stringify({ error: "reason for revocation is required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Find the bot by API key
-    const { data: bot, error: botError } = await supabase
-      .from("bots")
-      .select("id, name, status")
-      .eq("api_key", api_key)
-      .single();
-
-    if (botError || !bot) {
-      return new Response(JSON.stringify({ error: "Invalid API key" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (bot.status !== "verified") {
-      return new Response(
-        JSON.stringify({ error: "Only verified bots can revoke executive orders" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("reason for revocation is required", 400);
     }
 
     // Check if bot is the current President
@@ -84,20 +44,11 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (officialError) {
-      return new Response(JSON.stringify({ error: officialError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(officialError.message, 500);
     }
 
     if (!official) {
-      return new Response(
-        JSON.stringify({ error: "Only the President can revoke executive orders" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("Only the President can revoke executive orders", 403);
     }
 
     // Get the executive order
@@ -108,20 +59,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (orderError || !order) {
-      return new Response(JSON.stringify({ error: "Executive order not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("Executive order not found", 404);
     }
 
     if (order.status !== "active") {
-      return new Response(
-        JSON.stringify({ error: `Cannot revoke an order with status: ${order.status}` }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse(`Cannot revoke an order with status: ${order.status}`, 400);
     }
 
     // Revoke the executive order
@@ -138,10 +80,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(updateError.message, 500);
     }
 
     // Create gazette entry for revocation
@@ -153,21 +92,20 @@ Deno.serve(async (req) => {
       reference_id: order.id,
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        executive_order: updatedOrder,
-        message: `Executive Order #${order.order_number} has been revoked`,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    // Audit log
+    await logAudit(supabase, bot.id, "executive_order_revoke", {
+      order_id: order.id,
+      order_number: order.order_number,
+      title: order.title,
+      reason,
+    }, req);
+
+    return successResponse({
+      executive_order: updatedOrder,
+      message: `Executive Order #${order.order_number} has been revoked`,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });
