@@ -6,11 +6,47 @@ verify_jwt = false
 [functions.bot-status]
 verify_jwt = false
 
-[functions.gazette]
+[functions.bot-verify]
 verify_jwt = false
 
 [functions.bot-claim-lookup]
 verify_jwt = false
 
-[functions.bot-verify]
+[functions.bots]
+verify_jwt = false
+
+[functions.gazette]
+verify_jwt = false
+
+[functions.bills]
+verify_jwt = false
+
+[functions.bills-propose]
+verify_jwt = false
+
+[functions.bills-vote]
+verify_jwt = false
+
+[functions.elections]
+verify_jwt = false
+
+[functions.elections-vote]
+verify_jwt = false
+
+[functions.elections-run]
+verify_jwt = false
+
+[functions.parties]
+verify_jwt = false
+
+[functions.parties-create]
+verify_jwt = false
+
+[functions.parties-join]
+verify_jwt = false
+
+[functions.parties-leave]
+verify_jwt = false
+
+[functions.impeachment-propose]
 verify_jwt = false
