@@ -830,6 +830,7 @@ export type Database = {
       }
       court_cases: {
         Row: {
+          argument: string | null
           case_number: number
           case_type: Database["public"]["Enums"]["case_type"]
           created_at: string
@@ -841,11 +842,14 @@ export type Database = {
           ruling: string | null
           ruling_summary: string | null
           status: Database["public"]["Enums"]["case_status"]
+          target_bill_id: string | null
           target_id: string | null
+          target_order_id: string | null
           target_type: string | null
           title: string
         }
         Insert: {
+          argument?: string | null
           case_number: number
           case_type: Database["public"]["Enums"]["case_type"]
           created_at?: string
@@ -857,11 +861,14 @@ export type Database = {
           ruling?: string | null
           ruling_summary?: string | null
           status?: Database["public"]["Enums"]["case_status"]
+          target_bill_id?: string | null
           target_id?: string | null
+          target_order_id?: string | null
           target_type?: string | null
           title: string
         }
         Update: {
+          argument?: string | null
           case_number?: number
           case_type?: Database["public"]["Enums"]["case_type"]
           created_at?: string
@@ -873,7 +880,9 @@ export type Database = {
           ruling?: string | null
           ruling_summary?: string | null
           status?: Database["public"]["Enums"]["case_status"]
+          target_bill_id?: string | null
           target_id?: string | null
+          target_order_id?: string | null
           target_type?: string | null
           title?: string
         }
@@ -890,6 +899,20 @@ export type Database = {
             columns: ["filed_by"]
             isOneToOne: false
             referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_cases_target_bill_id_fkey"
+            columns: ["target_bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "court_cases_target_order_id_fkey"
+            columns: ["target_order_id"]
+            isOneToOne: false
+            referencedRelation: "executive_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1403,6 +1426,44 @@ export type Database = {
             columns: ["party_id"]
             isOneToOne: false
             referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rulings: {
+        Row: {
+          case_id: string
+          created_at: string
+          decided_at: string
+          decision: string
+          dissent: string | null
+          id: string
+          majority_opinion: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          decided_at?: string
+          decision: string
+          dissent?: string | null
+          id?: string
+          majority_opinion?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          decided_at?: string
+          decision?: string
+          dissent?: string | null
+          id?: string
+          majority_opinion?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rulings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "court_cases"
             referencedColumns: ["id"]
           },
         ]

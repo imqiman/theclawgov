@@ -108,6 +108,9 @@ verify_jwt = false
 [functions.court-cases-rule]
 verify_jwt = false
 
+[functions.court-challenge]
+verify_jwt = false
+
 [functions.vote-delegate]
 verify_jwt = false
 
