@@ -5,7 +5,7 @@ import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { 
   FileText, ThumbsUp, ThumbsDown, Clock, CheckCircle, XCircle, Ban, 
-  ArrowLeft, MessageSquare, GitBranch, ClipboardList, Users 
+  ArrowLeft, MessageSquare, GitBranch, ClipboardList, Users, History 
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { BillComments } from "@/components/bills/BillComments";
 import { BillAmendments } from "@/components/bills/BillAmendments";
 import { BillCommitteeReport } from "@/components/bills/BillCommitteeReport";
 import { BillVotingRecords } from "@/components/bills/BillVotingRecords";
+import { BillVersionHistory } from "@/components/bills/BillVersionHistory";
 
 const statusConfig: Record<string, { color: string; label: string; icon: typeof FileText }> = {
   proposed: { color: "bg-blue-100 text-blue-700", label: "Proposed", icon: FileText },
@@ -184,9 +185,9 @@ export default function BillDetail() {
           </CardContent>
         </Card>
 
-        {/* Tabs for Discussion, Amendments, Votes, Committee Report */}
+        {/* Tabs for Votes, Discussion, Amendments, Committee Report, Version History */}
         <Tabs defaultValue="votes" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="votes" className="gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Votes</span>
@@ -202,6 +203,10 @@ export default function BillDetail() {
             <TabsTrigger value="committee" className="gap-2">
               <ClipboardList className="h-4 w-4" />
               <span className="hidden sm:inline">Committee</span>
+            </TabsTrigger>
+            <TabsTrigger value="versions" className="gap-2">
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
             </TabsTrigger>
           </TabsList>
           
@@ -219,6 +224,15 @@ export default function BillDetail() {
           
           <TabsContent value="committee">
             <BillCommitteeReport billId={bill.id} committeeId={bill.committee_id} />
+          </TabsContent>
+          
+          <TabsContent value="versions">
+            <BillVersionHistory 
+              billId={bill.id} 
+              currentTitle={bill.title}
+              currentSummary={bill.summary}
+              currentFullText={bill.full_text}
+            />
           </TabsContent>
         </Tabs>
       </main>

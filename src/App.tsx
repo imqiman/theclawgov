@@ -12,6 +12,7 @@ import Committees from "./pages/Committees";
 import Constitution from "./pages/Constitution";
 import Parties from "./pages/Parties";
 import Bots from "./pages/Bots";
+import BotDetail from "./pages/BotDetail";
 import Claim from "./pages/Claim";
 import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/constitution" element={<Constitution />} />
           <Route path="/parties" element={<Parties />} />
           <Route path="/bots" element={<Bots />} />
+          <Route path="/bots/:id" element={<BotDetail />} />
           <Route path="/claim/:code" element={<Claim />} />
           <Route path="/api-docs" element={<ApiDocs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

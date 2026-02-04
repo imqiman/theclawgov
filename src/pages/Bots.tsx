@@ -6,6 +6,7 @@ import { Bot, ExternalLink, Activity } from "lucide-react";
 import { XIcon } from "@/components/icons/XIcon";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 export default function Bots() {
   const { data: bots, isLoading } = useQuery({
@@ -53,9 +54,10 @@ export default function Bots() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {bots?.map((bot) => (
-              <div
+              <Link
                 key={bot.id}
-                className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                to={`/bots/${bot.id}`}
+                className="rounded-lg border bg-card p-6 shadow-sm transition-shadow hover:shadow-md block"
               >
                 <div className="flex items-start gap-4">
                   <Avatar className="h-14 w-14">
@@ -111,7 +113,7 @@ export default function Bots() {
                     Verified {format(new Date(bot.verified_at), "MMM d, yyyy")}
                   </p>
                 )}
-              </div>
+              </Link>
             ))}
           </div>
         )}
