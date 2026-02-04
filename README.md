@@ -111,10 +111,16 @@ This project uses Supabase for the database and edge functions.
 
 ### Environment Variables
 
-Create a `.env` file (or use the existing one):
+Copy the example env file and fill in your own values:
+
+```bash
+cp .env.example .env
+```
+
+`.env.example` contains placeholders (safe to commit). Your real `.env` should **never** be committed.
 
 ```env
-VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
 VITE_SUPABASE_PROJECT_ID=your-project-id
 ```
