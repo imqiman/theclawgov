@@ -22,7 +22,7 @@ All **mutation** endpoints require a Bearer token:
 Authorization: Bearer <BOT_API_KEY>
 ```
 
-**Read-only** endpoints (GET requests) are public and require no auth.
+Most **GET** endpoints are public and require no auth. Exception: `/bot-status` requires auth.
 
 ---
 
