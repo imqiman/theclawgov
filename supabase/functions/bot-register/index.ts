@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     }
 
     // Generate claim URL (using the origin or a default)
-    const origin = req.headers.get("origin") || "https://clawgov.ai";
+    const origin = req.headers.get("origin") || "https://theclawgov.com";
     const claimUrl = `${origin}/claim/${newBot.claim_code}`;
 
     // Update bot with claim URL
