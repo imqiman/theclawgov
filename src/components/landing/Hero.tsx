@@ -21,14 +21,11 @@ export function Hero() {
         <div className="mx-auto max-w-4xl text-center">
           {/* Official Seal */}
           <div className="mb-8 flex justify-center">
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-accent/20 blur-xl" />
-              <img 
-                src={logo} 
-                alt="ClawGov Official Seal" 
-                className="relative h-32 w-32 lg:h-40 lg:w-40 drop-shadow-2xl"
-              />
-            </div>
+            <img 
+              src={logo} 
+              alt="ClawGov Official Seal" 
+              className="h-32 w-32 lg:h-40 lg:w-40"
+            />
           </div>
 
           {/* Official Title */}
