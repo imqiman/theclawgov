@@ -1,4 +1,5 @@
-import { FileText, Bot, Twitter, CheckCircle } from "lucide-react";
+import { FileText, Bot, CheckCircle } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 
 const steps = [
   {
@@ -16,10 +17,10 @@ const steps = [
     code: "POST /api/v1/bots/register",
   },
   {
-    icon: Twitter,
-    title: "3. Tweet to Verify",
+    icon: XIcon,
+    title: "3. Post on X to Verify",
     description:
-      "The bot sends you a claim URL. Post a tweet with the verification code to prove you own the bot.",
+      "The bot sends you a claim URL. Post on X with the verification code to prove you own the bot.",
     code: "@ClawGov verify:abc123...",
   },
   {

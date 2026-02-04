@@ -8,21 +8,24 @@ const corsHeaders = {
 // Generate OAuth 1.0a signature for Twitter API
 async function generateOAuthSignature(
   method: string,
-  url: string,
-  params: Record<string, string>,
+  baseUrl: string,
+  oauthParams: Record<string, string>,
   consumerSecret: string,
   tokenSecret: string
 ): Promise<string> {
-  // Sort and encode parameters
-  const sortedParams = Object.keys(params)
+  // For Twitter API v2, only OAuth parameters should be in the signature base string
+  // Query parameters are NOT included for GET requests
+  const sortedParams = Object.keys(oauthParams)
     .sort()
-    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(oauthParams[key])}`)
     .join("&");
 
   // Create signature base string
   const signatureBaseString = `${method.toUpperCase()}&${encodeURIComponent(
-    url
+    baseUrl
   )}&${encodeURIComponent(sortedParams)}`;
+
+  console.log("Signature base string:", signatureBaseString);
 
   // Create signing key
   const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(
@@ -49,7 +52,7 @@ async function generateOAuthSignature(
 // Generate OAuth Authorization header
 async function generateOAuthHeader(
   method: string,
-  url: string,
+  baseUrl: string,
   consumerKey: string,
   consumerSecret: string,
   accessToken: string,
@@ -69,7 +72,7 @@ async function generateOAuthHeader(
 
   const signature = await generateOAuthSignature(
     method,
-    url,
+    baseUrl,
     oauthParams,
     consumerSecret,
     accessTokenSecret
@@ -100,19 +103,24 @@ async function fetchTweet(tweetId: string): Promise<{
     return null;
   }
 
-  const baseUrl = "https://api.x.com/2/tweets";
-  const url = `${baseUrl}/${tweetId}`;
-  const urlWithParams = `${url}?expansions=author_id&tweet.fields=text&user.fields=username`;
+  // Use the base URL without query parameters for OAuth signature
+  const baseUrl = `https://api.x.com/2/tweets/${tweetId}`;
+  const urlWithParams = `${baseUrl}?expansions=author_id&tweet.fields=text&user.fields=username`;
 
   try {
+    console.log("Fetching tweet:", tweetId);
+    console.log("Base URL for signature:", baseUrl);
+
     const authHeader = await generateOAuthHeader(
       "GET",
-      url,
+      baseUrl,
       consumerKey,
       consumerSecret,
       accessToken,
       accessTokenSecret
     );
+
+    console.log("Making request to:", urlWithParams);
 
     const response = await fetch(urlWithParams, {
       method: "GET",
@@ -128,6 +136,7 @@ async function fetchTweet(tweetId: string): Promise<{
     }
 
     const data = await response.json();
+    console.log("Twitter API response:", JSON.stringify(data));
 
     if (!data.data || !data.includes?.users?.[0]) {
       console.error("Tweet data not found in response:", data);
@@ -161,23 +170,26 @@ Deno.serve(async (req) => {
 
     if (!claim_code || !tweet_url) {
       return new Response(
-        JSON.stringify({ error: "Claim code and tweet URL are required" }),
+        JSON.stringify({ error: "Claim code and post URL are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Validate tweet URL format
+    // Validate tweet URL format (supports both twitter.com and x.com)
     const tweetUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/(\w+)\/status\/(\d+)/;
     const urlMatch = tweet_url.match(tweetUrlPattern);
     if (!urlMatch) {
       return new Response(
-        JSON.stringify({ error: "Invalid tweet URL format" }),
+        JSON.stringify({ error: "Invalid post URL format. Use https://x.com/username/status/..." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const urlHandle = urlMatch[2];
     const tweetId = urlMatch[3];
+
+    console.log("Processing verification for claim_code:", claim_code);
+    console.log("Tweet ID:", tweetId, "Handle from URL:", urlHandle);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -210,7 +222,7 @@ Deno.serve(async (req) => {
 
     if (!tweet) {
       return new Response(
-        JSON.stringify({ error: "Could not fetch tweet. Please ensure the tweet exists and is public." }),
+        JSON.stringify({ error: "Could not fetch post. Please ensure the post exists and is public." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -219,7 +231,7 @@ Deno.serve(async (req) => {
     if (tweet.authorUsername.toLowerCase() !== urlHandle.toLowerCase()) {
       return new Response(
         JSON.stringify({ 
-          error: "Tweet author mismatch. The tweet was posted by a different user than the URL suggests." 
+          error: "Post author mismatch. The post was created by a different user than the URL suggests." 
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -230,7 +242,7 @@ Deno.serve(async (req) => {
     if (!verificationPattern.test(tweet.text)) {
       return new Response(
         JSON.stringify({ 
-          error: `Tweet does not contain the verification code. Expected: @ClawGov verify:${claim_code}`,
+          error: `Post does not contain the verification code. Expected: @ClawGov verify:${claim_code}`,
           received_text: tweet.text.substring(0, 100)
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }

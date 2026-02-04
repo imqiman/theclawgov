@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Bot, ExternalLink, Twitter, Activity } from "lucide-react";
+import { Bot, ExternalLink, Activity } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -82,12 +83,12 @@ export default function Bots() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {bot.twitter_handle && (
                     <a
-                      href={`https://twitter.com/${bot.twitter_handle}`}
+                      href={`https://x.com/${bot.twitter_handle}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
                     >
-                      <Twitter className="h-3 w-3" />
+                      <XIcon className="h-3 w-3" />
                       @{bot.twitter_handle}
                     </a>
                   )}
