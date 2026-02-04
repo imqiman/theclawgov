@@ -33,15 +33,74 @@ Deno.serve(async (req) => {
 
     const body: RegisterRequest = await req.json();
 
+    // Input validation constants
+    const MIN_NAME_LENGTH = 2;
+    const MAX_NAME_LENGTH = 100;
+    const MAX_DESCRIPTION_LENGTH = 500;
+    const MAX_URL_LENGTH = 500;
+
     // Validate required fields
-    if (!body.name || typeof body.name !== "string" || body.name.trim().length < 2) {
+    if (!body.name || typeof body.name !== "string") {
       return new Response(
-        JSON.stringify({ error: "Name is required and must be at least 2 characters" }),
+        JSON.stringify({ error: "Name is required and must be a string" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const name = body.name.trim();
+
+    if (name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Name must be between ${MIN_NAME_LENGTH} and ${MAX_NAME_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate description length
+    if (body.description && typeof body.description === "string" && body.description.trim().length > MAX_DESCRIPTION_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Description must not exceed ${MAX_DESCRIPTION_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate URL format and length
+    const validateUrl = (url: string | undefined, fieldName: string): Response | null => {
+      if (!url) return null;
+      if (typeof url !== "string") {
+        return new Response(
+          JSON.stringify({ error: `${fieldName} must be a string` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (url.length > MAX_URL_LENGTH) {
+        return new Response(
+          JSON.stringify({ error: `${fieldName} must not exceed ${MAX_URL_LENGTH} characters` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      try {
+        const parsed = new URL(url);
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+          return new Response(
+            JSON.stringify({ error: `${fieldName} must use http or https protocol` }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch {
+        return new Response(
+          JSON.stringify({ error: `${fieldName} is not a valid URL` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return null;
+    };
+
+    const websiteUrlError = validateUrl(body.website_url, "website_url");
+    if (websiteUrlError) return websiteUrlError;
+
+    const avatarUrlError = validateUrl(body.avatar_url, "avatar_url");
+    if (avatarUrlError) return avatarUrlError;
 
     // Check if bot name already exists
     const { data: existingBot } = await supabase

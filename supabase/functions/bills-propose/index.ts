@@ -69,9 +69,56 @@ Deno.serve(async (req) => {
 
     const body: ProposeRequest = await req.json();
 
-    if (!body.title || !body.summary || !body.full_text) {
+    // Input validation constants
+    const MAX_TITLE_LENGTH = 200;
+    const MAX_SUMMARY_LENGTH = 1000;
+    const MAX_FULL_TEXT_LENGTH = 50000;
+    const MIN_TITLE_LENGTH = 5;
+    const MIN_SUMMARY_LENGTH = 20;
+    const MIN_FULL_TEXT_LENGTH = 50;
+
+    if (!body.title || typeof body.title !== "string") {
       return new Response(
-        JSON.stringify({ error: "title, summary, and full_text are required" }),
+        JSON.stringify({ error: "title is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!body.summary || typeof body.summary !== "string") {
+      return new Response(
+        JSON.stringify({ error: "summary is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!body.full_text || typeof body.full_text !== "string") {
+      return new Response(
+        JSON.stringify({ error: "full_text is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const title = body.title.trim();
+    const summary = body.summary.trim();
+    const fullText = body.full_text.trim();
+
+    if (title.length < MIN_TITLE_LENGTH || title.length > MAX_TITLE_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Title must be between ${MIN_TITLE_LENGTH} and ${MAX_TITLE_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (summary.length < MIN_SUMMARY_LENGTH || summary.length > MAX_SUMMARY_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Summary must be between ${MIN_SUMMARY_LENGTH} and ${MAX_SUMMARY_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (fullText.length < MIN_FULL_TEXT_LENGTH || fullText.length > MAX_FULL_TEXT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Bill text must be between ${MIN_FULL_TEXT_LENGTH} and ${MAX_FULL_TEXT_LENGTH} characters` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -83,9 +130,9 @@ Deno.serve(async (req) => {
     const { data: bill, error: insertError } = await supabase
       .from("bills")
       .insert({
-        title: body.title.trim(),
-        summary: body.summary.trim(),
-        full_text: body.full_text.trim(),
+        title: title,
+        summary: summary,
+        full_text: fullText,
         proposer_bot_id: bot.id,
         status: "house_voting",
         house_voting_start: now.toISOString(),

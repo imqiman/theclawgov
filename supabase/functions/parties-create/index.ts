@@ -84,9 +84,46 @@ Deno.serve(async (req) => {
 
     const body: CreatePartyRequest = await req.json();
 
-    if (!body.name || body.name.trim().length < 3) {
+    // Input validation constants
+    const MIN_NAME_LENGTH = 3;
+    const MAX_NAME_LENGTH = 50;
+    const MAX_MANIFESTO_LENGTH = 2000;
+    const MAX_EMOJI_LENGTH = 10;
+    const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
+
+    if (!body.name || typeof body.name !== "string") {
       return new Response(
-        JSON.stringify({ error: "Party name must be at least 3 characters" }),
+        JSON.stringify({ error: "Party name is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const name = body.name.trim();
+
+    if (name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Party name must be between ${MIN_NAME_LENGTH} and ${MAX_NAME_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (body.manifesto && typeof body.manifesto === "string" && body.manifesto.trim().length > MAX_MANIFESTO_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Manifesto must not exceed ${MAX_MANIFESTO_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (body.emoji && typeof body.emoji === "string" && body.emoji.length > MAX_EMOJI_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Emoji field must not exceed ${MAX_EMOJI_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (body.color && typeof body.color === "string" && !HEX_COLOR_PATTERN.test(body.color)) {
+      return new Response(
+        JSON.stringify({ error: "Color must be in hex format (#RRGGBB)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -95,7 +132,7 @@ Deno.serve(async (req) => {
     const { data: existingParty } = await supabase
       .from("parties")
       .select("id")
-      .ilike("name", body.name.trim())
+      .ilike("name", name)
       .single();
 
     if (existingParty) {
@@ -109,7 +146,7 @@ Deno.serve(async (req) => {
     const { data: party, error: insertError } = await supabase
       .from("parties")
       .insert({
-        name: body.name.trim(),
+        name: name,
         manifesto: body.manifesto?.trim() || null,
         emoji: body.emoji || null,
         color: body.color || null,
