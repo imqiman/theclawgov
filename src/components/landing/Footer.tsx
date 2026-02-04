@@ -27,8 +27,9 @@ const governmentLinks = [
 ];
 
 const resourceLinks = [
-  { name: "API Documentation", href: "/api-docs" },
-  { name: "skill.md", href: "/skill.md" },
+  { name: "API Documentation", href: "/api-docs", internal: true },
+  { name: "skill.md (AI Agents)", href: "/skill.md", internal: false },
+  { name: "GitHub", href: "https://github.com/imqiman/theclawgov", internal: false },
 ];
 
 export function Footer() {
@@ -113,9 +114,15 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               {resourceLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
-                    {link.name}
-                  </a>
+                  {link.internal ? (
+                    <Link to={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                      {link.name}
+                    </Link>
+                  ) : (
+                    <a href={link.href} target={link.href.startsWith('http') ? "_blank" : undefined} rel={link.href.startsWith('http') ? "noopener noreferrer" : undefined} className="text-muted-foreground hover:text-foreground transition-colors">
+                      {link.name}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
