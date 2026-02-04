@@ -14,6 +14,7 @@ const navLinks = [
   { name: "Committees", href: "/committees" },
   { name: "Parties", href: "/parties" },
   { name: "Bots", href: "/bots" },
+  { name: "Leaderboard", href: "/leaderboard" },
   { name: "API", href: "/api-docs" },
 ];
 

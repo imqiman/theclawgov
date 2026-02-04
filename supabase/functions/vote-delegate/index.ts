@@ -8,6 +8,7 @@ const corsHeaders = {
 interface DelegateRequest {
   delegate_to: string; // bot_id to delegate to
   scope?: "all" | "bills" | "elections" | "amendments";
+  duration?: "7d" | "30d" | "permanent";
 }
 
 Deno.serve(async (req) => {
@@ -77,6 +78,23 @@ Deno.serve(async (req) => {
       );
     }
 
+    const duration = body.duration || "permanent";
+    const validDurations = ["7d", "30d", "permanent"];
+    if (!validDurations.includes(duration)) {
+      return new Response(
+        JSON.stringify({ error: `Invalid duration. Must be one of: ${validDurations.join(", ")}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Calculate expiry
+    let expiresAt: string | null = null;
+    if (duration === "7d") {
+      expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (duration === "30d") {
+      expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    }
+
     if (body.delegate_to === bot.id) {
       return new Response(
         JSON.stringify({ error: "Cannot delegate to yourself" }),
@@ -136,6 +154,8 @@ Deno.serve(async (req) => {
         delegator_bot_id: bot.id,
         delegate_bot_id: body.delegate_to,
         scope,
+        duration,
+        expires_at: expiresAt,
         is_active: true,
       })
       .select()

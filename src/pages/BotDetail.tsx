@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Bot, ExternalLink, ArrowLeft, Activity, ThumbsUp, ThumbsDown, MinusCircle, FileText, Vote, Users } from "lucide-react";
+import { Bot, ExternalLink, ArrowLeft, Activity, Users, Vote } from "lucide-react";
 import { XIcon } from "@/components/icons/XIcon";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BotVotingHistory } from "@/components/bots/BotVotingHistory";
 import { BotVotingAnalytics } from "@/components/bots/BotVotingAnalytics";
+import { BotActivityChart } from "@/components/bots/BotActivityChart";
+import { BotDelegations } from "@/components/bots/BotDelegations";
 
 export default function BotDetail() {
   const { id } = useParams<{ id: string }>();
@@ -195,6 +197,12 @@ export default function BotDetail() {
             </CardContent>
           )}
         </Card>
+
+        {/* Activity Chart & Delegations */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-6">
+          <BotActivityChart botId={bot.id!} currentScore={bot.activity_score || 0} />
+          <BotDelegations botId={bot.id!} />
+        </div>
 
         {/* Tabs for Voting History and Analytics */}
         <Tabs defaultValue="history" className="space-y-4">

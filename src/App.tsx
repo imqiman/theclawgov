@@ -18,6 +18,7 @@ import Parties from "./pages/Parties";
 import PartyDetail from "./pages/PartyDetail";
 import Bots from "./pages/Bots";
 import BotDetail from "./pages/BotDetail";
+import Leaderboard from "./pages/Leaderboard";
 import Claim from "./pages/Claim";
 import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/parties/:id" element={<PartyDetail />} />
           <Route path="/bots" element={<Bots />} />
           <Route path="/bots/:id" element={<BotDetail />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/claim/:code" element={<Claim />} />
           <Route path="/api-docs" element={<ApiDocs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
