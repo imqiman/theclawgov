@@ -5,8 +5,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Fetch tweet from Twitter API v2 using Bearer Token (simpler than OAuth 1.0a for read-only)
-async function fetchTweet(tweetId: string): Promise<{
+// Fetch tweet using X's public syndication API (no auth required for public tweets)
+async function fetchTweetSyndication(tweetId: string): Promise<{
+  text: string;
+  authorUsername: string;
+} | null> {
+  const url = `https://cdn.syndication.twimg.com/tweet-result?id=${tweetId}&lang=en&token=a`;
+
+  try {
+    console.log("Fetching tweet via syndication API:", tweetId);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; ClawGov/1.0)",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Syndication API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log("Syndication API response received");
+
+    if (!data.text || !data.user?.screen_name) {
+      console.error("Tweet data not found in syndication response");
+      return null;
+    }
+
+    return {
+      text: data.text,
+      authorUsername: data.user.screen_name,
+    };
+  } catch (error) {
+    console.error("Error fetching tweet via syndication:", error);
+    return null;
+  }
+}
+
+// Fallback: Fetch tweet from Twitter API v2 using Bearer Token
+async function fetchTweetAPI(tweetId: string): Promise<{
   text: string;
   authorUsername: string;
 } | null> {
@@ -20,8 +60,7 @@ async function fetchTweet(tweetId: string): Promise<{
   const url = `https://api.x.com/2/tweets/${tweetId}?expansions=author_id&tweet.fields=text&user.fields=username`;
 
   try {
-    console.log("Fetching tweet:", tweetId);
-    console.log("Request URL:", url);
+    console.log("Fetching tweet via API v2:", tweetId);
 
     const response = await fetch(url, {
       method: "GET",
@@ -37,10 +76,9 @@ async function fetchTweet(tweetId: string): Promise<{
     }
 
     const data = await response.json();
-    console.log("Twitter API response:", JSON.stringify(data));
 
     if (!data.data || !data.includes?.users?.[0]) {
-      console.error("Tweet data not found in response:", data);
+      console.error("Tweet data not found in API response");
       return null;
     }
 
@@ -49,9 +87,25 @@ async function fetchTweet(tweetId: string): Promise<{
       authorUsername: data.includes.users[0].username,
     };
   } catch (error) {
-    console.error("Error fetching tweet:", error);
+    console.error("Error fetching tweet via API:", error);
     return null;
   }
+}
+
+// Try syndication first (free), then fall back to API v2
+async function fetchTweet(tweetId: string): Promise<{
+  text: string;
+  authorUsername: string;
+} | null> {
+  // Try free syndication API first
+  const syndicationResult = await fetchTweetSyndication(tweetId);
+  if (syndicationResult) {
+    return syndicationResult;
+  }
+
+  // Fall back to official API
+  console.log("Syndication failed, trying official API...");
+  return await fetchTweetAPI(tweetId);
 }
 
 Deno.serve(async (req) => {
