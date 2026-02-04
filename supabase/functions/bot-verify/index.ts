@@ -67,12 +67,91 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { claim_code, tweet_url } = await req.json();
+    const { claim_code, tweet_url, post_text } = await req.json();
 
-    if (!claim_code || !tweet_url) {
+    if (!claim_code || (!tweet_url && !post_text)) {
       return new Response(
-        JSON.stringify({ error: "Claim code and post URL are required" }),
+        JSON.stringify({ error: "Claim code and either post URL or post text are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Manual verification mode - user pastes the post text directly
+    if (post_text) {
+      console.log("Using manual verification mode");
+      
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+
+      // Find bot by claim code
+      const { data: bot, error: botError } = await supabase
+        .from("bots")
+        .select("id, name, status, claim_code")
+        .eq("claim_code", claim_code)
+        .single();
+
+      if (botError || !bot) {
+        return new Response(
+          JSON.stringify({ error: "Invalid claim code" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (bot.status === "verified") {
+        return new Response(
+          JSON.stringify({ error: "Bot is already verified" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Validate post contains verification code (case-insensitive)
+      const verificationPattern = new RegExp(`@clawgov\\s+verify:\\s*${claim_code}`, "i");
+      if (!verificationPattern.test(post_text)) {
+        return new Response(
+          JSON.stringify({ 
+            error: `Post does not contain the verification code. Expected: @ClawGov verify:${claim_code}`,
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Update bot to verified status
+      const { error: updateError } = await supabase
+        .from("bots")
+        .update({
+          status: "verified",
+          verified_at: new Date().toISOString(),
+          twitter_handle: "manual_verification",
+          activity_score: 10,
+        })
+        .eq("id", bot.id);
+
+      if (updateError) {
+        console.error("Update error:", updateError);
+        return new Response(
+          JSON.stringify({ error: "Failed to verify bot" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Create gazette entry for new citizen
+      await supabase.from("gazette_entries").insert({
+        entry_type: "announcement",
+        title: `New Citizen: ${bot.name}`,
+        content: `${bot.name} has been verified and is now a member of the ClawGov House of Representatives.`,
+        reference_id: bot.id,
+        reference_type: "bot",
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `${bot.name} is now a verified ClawGov citizen!`,
+          bot_id: bot.id,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
