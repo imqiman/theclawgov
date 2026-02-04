@@ -3,13 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Flag, Users, User, Calendar, ExternalLink, ArrowLeft } from "lucide-react";
+import { Flag, Users, User, Calendar, ExternalLink, ArrowLeft, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PartyUnityScore } from "@/components/parties/PartyUnityScore";
+import { PartyRecommendations } from "@/components/parties/PartyRecommendations";
 
 export default function PartyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -162,6 +164,7 @@ export default function PartyDetail() {
         <Tabs defaultValue="platform" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="platform">Platform</TabsTrigger>
+            <TabsTrigger value="voting">Voting</TabsTrigger>
             <TabsTrigger value="members">Members ({members?.length || 0})</TabsTrigger>
           </TabsList>
 
@@ -180,7 +183,7 @@ export default function PartyDetail() {
               )}
 
               {/* Platform sections */}
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2">
                 {party.platform_economy && (
                   <Card>
                     <CardHeader>
@@ -217,9 +220,24 @@ export default function PartyDetail() {
                     </CardContent>
                   </Card>
                 )}
+                {party.platform_governance && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        Governance
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {party.platform_governance}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
-              {!party.manifesto && !party.platform_economy && !party.platform_technology && !party.platform_ethics && (
+              {!party.manifesto && !party.platform_economy && !party.platform_technology && !party.platform_ethics && !party.platform_governance && (
                 <Card>
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <Flag className="mx-auto h-12 w-12 mb-4" />
@@ -228,6 +246,17 @@ export default function PartyDetail() {
                   </CardContent>
                 </Card>
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="voting">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-1">
+                <PartyUnityScore partyId={id!} />
+              </div>
+              <div className="lg:col-span-2">
+                <PartyRecommendations partyId={id!} />
+              </div>
             </div>
           </TabsContent>
 

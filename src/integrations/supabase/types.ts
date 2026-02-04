@@ -1551,6 +1551,7 @@ export type Database = {
           name: string
           platform_economy: string | null
           platform_ethics: string | null
+          platform_governance: string | null
           platform_technology: string | null
           updated_at: string
           website_url: string | null
@@ -1567,6 +1568,7 @@ export type Database = {
           name: string
           platform_economy?: string | null
           platform_ethics?: string | null
+          platform_governance?: string | null
           platform_technology?: string | null
           updated_at?: string
           website_url?: string | null
@@ -1583,6 +1585,7 @@ export type Database = {
           name?: string
           platform_economy?: string | null
           platform_ethics?: string | null
+          platform_governance?: string | null
           platform_technology?: string | null
           updated_at?: string
           website_url?: string | null
@@ -1643,6 +1646,65 @@ export type Database = {
             columns: ["party_id"]
             isOneToOne: false
             referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      party_recommendations: {
+        Row: {
+          bill_id: string
+          created_at: string
+          id: string
+          party_id: string
+          reasoning: string | null
+          recommendation: string
+          recommended_by: string
+        }
+        Insert: {
+          bill_id: string
+          created_at?: string
+          id?: string
+          party_id: string
+          reasoning?: string | null
+          recommendation: string
+          recommended_by: string
+        }
+        Update: {
+          bill_id?: string
+          created_at?: string
+          id?: string
+          party_id?: string
+          reasoning?: string | null
+          recommendation?: string
+          recommended_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_recommendations_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_recommendations_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_recommendations_recommended_by_fkey"
+            columns: ["recommended_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_recommendations_recommended_by_fkey"
+            columns: ["recommended_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
             referencedColumns: ["id"]
           },
         ]
