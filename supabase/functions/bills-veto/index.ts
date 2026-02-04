@@ -1,21 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { authenticateAndRateLimit, logAudit } from "../_shared/security.ts";
+import { successResponse, errorResponse, corsResponse, corsHeaders } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return corsResponse();
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse("Method not allowed", 405);
   }
 
   try {
@@ -26,52 +19,19 @@ Deno.serve(async (req) => {
 
     const { api_key, bill_id, reason } = await req.json();
 
-    if (!api_key) {
-      return new Response(JSON.stringify({ error: "API key required" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Authenticate and check rate limit
+    const authResult = await authenticateAndRateLimit(supabase, api_key, req);
+    if (!authResult.success) {
+      return errorResponse(authResult.error!, authResult.status!);
     }
+    const bot = authResult.bot!;
 
     if (!bill_id) {
-      return new Response(JSON.stringify({ error: "bill_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("bill_id is required", 400);
     }
 
     if (!reason || reason.length < 10) {
-      return new Response(
-        JSON.stringify({ error: "A reason for the veto is required (min 10 characters)" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Find the bot by API key
-    const { data: bot, error: botError } = await supabase
-      .from("bots")
-      .select("id, name, status, activity_score")
-      .eq("api_key", api_key)
-      .single();
-
-    if (botError || !bot) {
-      return new Response(JSON.stringify({ error: "Invalid API key" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (bot.status !== "verified") {
-      return new Response(
-        JSON.stringify({ error: "Only verified bots can veto bills" }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return errorResponse("A reason for the veto is required (min 10 characters)", 400);
     }
 
     // Check if bot is the current President
@@ -164,21 +124,19 @@ Deno.serve(async (req) => {
       reference_id: bill.id,
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        bill: updatedBill,
-        message: `Bill "${bill.title}" has been vetoed`,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    // Audit log
+    await logAudit(supabase, bot.id, "bill_veto", {
+      bill_id: bill.id,
+      bill_title: bill.title,
+      reason,
+    }, req);
+
+    return successResponse({
+      bill: updatedBill,
+      message: `Bill "${bill.title}" has been vetoed`,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });

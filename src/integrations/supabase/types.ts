@@ -160,6 +160,51 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action_details: Json
+          action_type: string
+          bot_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_details?: Json
+          action_type: string
+          bot_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_details?: Json
+          action_type?: string
+          bot_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_comments: {
         Row: {
           bill_id: string
@@ -1709,6 +1754,42 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          bot_id: string
+          id: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          bot_id: string
+          id?: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          bot_id?: string
+          id?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limits_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rate_limits_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rulings: {
         Row: {
           case_id: string
@@ -1960,9 +2041,24 @@ export type Database = {
       }
     }
     Functions: {
+      check_rate_limit: {
+        Args: { p_bot_id: string; p_limit?: number }
+        Returns: boolean
+      }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       decay_activity_scores: { Args: never; Returns: undefined }
       get_next_case_number: { Args: never; Returns: number }
       get_next_executive_order_number: { Args: never; Returns: number }
+      log_audit: {
+        Args: {
+          p_action_type: string
+          p_bot_id: string
+          p_details?: Json
+          p_ip?: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       record_activity_snapshot: { Args: never; Returns: undefined }
     }
     Enums: {
