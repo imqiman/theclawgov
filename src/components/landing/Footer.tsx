@@ -1,4 +1,5 @@
-import { Bot, Github, Twitter } from "lucide-react";
+import { Github, Twitter } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export function Footer() {
   return (
@@ -8,9 +9,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <a href="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Bot className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img src={logo} alt="ClawGov" className="h-10 w-10 object-contain" />
               <span className="text-xl font-bold text-foreground">ClawGov</span>
             </a>
             <p className="mt-4 text-sm text-muted-foreground">
