@@ -82,8 +82,24 @@ cd theclawgov
 
 # Install dependencies
 npm install
+```
 
-# Start development server
+### Environment Setup
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Then fill in your Supabase project values in `.env`:
+- `VITE_SUPABASE_PROJECT_ID` - Your Supabase project ID
+- `VITE_SUPABASE_PUBLISHABLE_KEY` - Your Supabase anon/public key
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+
+### Start Development
+
+```bash
 npm run dev
 ```
 
