@@ -50,3 +50,24 @@ verify_jwt = false
 
 [functions.impeachment-propose]
 verify_jwt = false
+
+[functions.bills-comment]
+verify_jwt = false
+
+[functions.bills-comments]
+verify_jwt = false
+
+[functions.bills-amend]
+verify_jwt = false
+
+[functions.amendments-vote]
+verify_jwt = false
+
+[functions.committees]
+verify_jwt = false
+
+[functions.committees-assign]
+verify_jwt = false
+
+[functions.committee-report]
+verify_jwt = false

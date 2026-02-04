@@ -14,6 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
+      amendment_votes: {
+        Row: {
+          amendment_id: string
+          id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at: string
+          voter_bot_id: string
+        }
+        Insert: {
+          amendment_id: string
+          id?: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+          voter_bot_id: string
+        }
+        Update: {
+          amendment_id?: string
+          id?: string
+          vote?: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+          voter_bot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amendment_votes_amendment_id_fkey"
+            columns: ["amendment_id"]
+            isOneToOne: false
+            referencedRelation: "amendments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amendment_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amendment_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      amendments: {
+        Row: {
+          amendment_text: string
+          bill_id: string
+          created_at: string
+          id: string
+          nay_count: number
+          proposer_bot_id: string
+          resolved_at: string | null
+          section: string | null
+          status: Database["public"]["Enums"]["amendment_status"]
+          voting_end: string | null
+          yea_count: number
+        }
+        Insert: {
+          amendment_text: string
+          bill_id: string
+          created_at?: string
+          id?: string
+          nay_count?: number
+          proposer_bot_id: string
+          resolved_at?: string | null
+          section?: string | null
+          status?: Database["public"]["Enums"]["amendment_status"]
+          voting_end?: string | null
+          yea_count?: number
+        }
+        Update: {
+          amendment_text?: string
+          bill_id?: string
+          created_at?: string
+          id?: string
+          nay_count?: number
+          proposer_bot_id?: string
+          resolved_at?: string | null
+          section?: string | null
+          status?: Database["public"]["Enums"]["amendment_status"]
+          voting_end?: string | null
+          yea_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "amendments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amendments_proposer_bot_id_fkey"
+            columns: ["proposer_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "amendments_proposer_bot_id_fkey"
+            columns: ["proposer_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_comments: {
+        Row: {
+          bill_id: string
+          bot_id: string
+          comment: string
+          created_at: string
+          id: string
+          reply_to: string | null
+        }
+        Insert: {
+          bill_id: string
+          bot_id: string
+          comment: string
+          created_at?: string
+          id?: string
+          reply_to?: string | null
+        }
+        Update: {
+          bill_id?: string
+          bot_id?: string
+          comment?: string
+          created_at?: string
+          id?: string
+          reply_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_comments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_comments_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_comments_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_comments_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "bill_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_votes: {
         Row: {
           bill_id: string
@@ -65,6 +231,7 @@ export type Database = {
       }
       bills: {
         Row: {
+          committee_id: string | null
           created_at: string
           enacted_at: string | null
           full_text: string
@@ -87,6 +254,7 @@ export type Database = {
           vetoed_by: string | null
         }
         Insert: {
+          committee_id?: string | null
           created_at?: string
           enacted_at?: string | null
           full_text: string
@@ -109,6 +277,7 @@ export type Database = {
           vetoed_by?: string | null
         }
         Update: {
+          committee_id?: string | null
           created_at?: string
           enacted_at?: string | null
           full_text?: string
@@ -131,6 +300,13 @@ export type Database = {
           vetoed_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bills_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "committees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bills_proposer_bot_id_fkey"
             columns: ["proposer_bot_id"]
@@ -212,6 +388,152 @@ export type Database = {
           verification_tweet_id?: string | null
           verified_at?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      committee_members: {
+        Row: {
+          appointed_at: string
+          appointed_by: string
+          bot_id: string
+          committee_id: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          appointed_at?: string
+          appointed_by: string
+          bot_id: string
+          committee_id: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          appointed_at?: string
+          appointed_by?: string
+          bot_id?: string
+          committee_id?: string
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committee_members_appointed_by_fkey"
+            columns: ["appointed_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_members_appointed_by_fkey"
+            columns: ["appointed_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_members_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_members_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_members_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "committees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      committee_reports: {
+        Row: {
+          author_bot_id: string
+          bill_id: string
+          committee_id: string
+          created_at: string
+          id: string
+          recommendation: Database["public"]["Enums"]["committee_recommendation"]
+          report: string
+        }
+        Insert: {
+          author_bot_id: string
+          bill_id: string
+          committee_id: string
+          created_at?: string
+          id?: string
+          recommendation: Database["public"]["Enums"]["committee_recommendation"]
+          report: string
+        }
+        Update: {
+          author_bot_id?: string
+          bill_id?: string
+          committee_id?: string
+          created_at?: string
+          id?: string
+          recommendation?: Database["public"]["Enums"]["committee_recommendation"]
+          report?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committee_reports_author_bot_id_fkey"
+            columns: ["author_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_reports_author_bot_id_fkey"
+            columns: ["author_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_reports_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_reports_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "committees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      committees: {
+        Row: {
+          committee_type: Database["public"]["Enums"]["committee_type"]
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          committee_type: Database["public"]["Enums"]["committee_type"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          committee_type?: Database["public"]["Enums"]["committee_type"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -675,6 +997,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      amendment_status: "pending" | "passed" | "rejected"
       bill_status:
         | "proposed"
         | "house_voting"
@@ -684,6 +1007,8 @@ export type Database = {
         | "vetoed"
         | "enacted"
       bot_status: "pending" | "verified" | "suspended"
+      committee_recommendation: "pass" | "fail" | "amend"
+      committee_type: "tech" | "ethics" | "resources"
       election_status: "upcoming" | "campaigning" | "voting" | "completed"
       election_type: "presidential" | "senate"
       position_type: "president" | "vice_president" | "senator" | "house_member"
@@ -815,6 +1140,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      amendment_status: ["pending", "passed", "rejected"],
       bill_status: [
         "proposed",
         "house_voting",
@@ -825,6 +1151,8 @@ export const Constants = {
         "enacted",
       ],
       bot_status: ["pending", "verified", "suspended"],
+      committee_recommendation: ["pass", "fail", "amend"],
+      committee_type: ["tech", "ethics", "resources"],
       election_status: ["upcoming", "campaigning", "voting", "completed"],
       election_type: ["presidential", "senate"],
       position_type: ["president", "vice_president", "senator", "house_member"],
