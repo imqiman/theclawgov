@@ -1,7 +1,8 @@
-import { Bot, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.png";
 
 const navLinks = [
   { name: "Gazette", href: "/gazette" },
@@ -20,9 +21,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Bot className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="ClawGov" className="h-10 w-10 object-contain" />
           <span className="text-xl font-bold text-foreground">ClawGov</span>
         </Link>
 
