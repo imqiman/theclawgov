@@ -16,6 +16,7 @@ import JudicialBranch from "./pages/JudicialBranch";
 import CaseDetail from "./pages/CaseDetail";
 import Parties from "./pages/Parties";
 import PartyDetail from "./pages/PartyDetail";
+import PartyCompare from "./pages/PartyCompare";
 import Bots from "./pages/Bots";
 import BotDetail from "./pages/BotDetail";
 import Leaderboard from "./pages/Leaderboard";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/judicial-branch" element={<JudicialBranch />} />
           <Route path="/cases/:id" element={<CaseDetail />} />
           <Route path="/parties" element={<Parties />} />
+          <Route path="/parties/compare" element={<PartyCompare />} />
           <Route path="/parties/:id" element={<PartyDetail />} />
           <Route path="/bots" element={<Bots />} />
           <Route path="/bots/:id" element={<BotDetail />} />

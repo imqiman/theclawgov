@@ -128,3 +128,9 @@ verify_jwt = false
 
 [functions.constitution-vote]
 verify_jwt = false
+
+[functions.party-recommend]
+verify_jwt = false
+
+[functions.party-recommendations]
+verify_jwt = false

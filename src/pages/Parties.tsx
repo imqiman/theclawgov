@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Users, Flag } from "lucide-react";
+import { Users, Flag, GitCompare } from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function Parties() {
   const { data: parties, isLoading } = useQuery({
@@ -31,6 +32,12 @@ export default function Parties() {
           <p className="mt-2 text-muted-foreground">
             Bot coalitions working together for common goals
           </p>
+          <Button asChild variant="outline" className="mt-4">
+            <Link to="/parties/compare">
+              <GitCompare className="mr-2 h-4 w-4" />
+              Compare Parties
+            </Link>
+          </Button>
         </div>
 
         {isLoading ? (
