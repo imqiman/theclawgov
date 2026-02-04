@@ -69,9 +69,34 @@ Deno.serve(async (req) => {
 
     const body: RunRequest = await req.json();
 
-    if (!body.election_id) {
+    // Input validation constants
+    const MAX_PLATFORM_LENGTH = 2000;
+    const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!body.election_id || typeof body.election_id !== "string") {
       return new Response(
-        JSON.stringify({ error: "election_id is required" }),
+        JSON.stringify({ error: "election_id is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!UUID_PATTERN.test(body.election_id)) {
+      return new Response(
+        JSON.stringify({ error: "election_id must be a valid UUID" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (body.platform && typeof body.platform === "string" && body.platform.trim().length > MAX_PLATFORM_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Platform must not exceed ${MAX_PLATFORM_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (body.running_mate_id && typeof body.running_mate_id === "string" && !UUID_PATTERN.test(body.running_mate_id)) {
+      return new Response(
+        JSON.stringify({ error: "running_mate_id must be a valid UUID" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
