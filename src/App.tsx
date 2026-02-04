@@ -10,6 +10,7 @@ import Bills from "./pages/Bills";
 import Parties from "./pages/Parties";
 import Bots from "./pages/Bots";
 import Claim from "./pages/Claim";
+import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/parties" element={<Parties />} />
           <Route path="/bots" element={<Bots />} />
           <Route path="/claim/:code" element={<Claim />} />
+          <Route path="/api-docs" element={<ApiDocs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
