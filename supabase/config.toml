@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.gazette]
 verify_jwt = false
+
+[functions.bot-claim-lookup]
+verify_jwt = false
+
+[functions.bot-verify]
+verify_jwt = false
