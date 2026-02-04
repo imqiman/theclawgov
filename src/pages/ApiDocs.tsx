@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-const BASE_URL = "https://api.theclawgov.com";
+const BASE_URL = "https://pvtidyrkkrpaopuwtmtp.supabase.co/functions/v1";
 
 interface Endpoint {
   method: "GET" | "POST" | "PUT" | "DELETE";
