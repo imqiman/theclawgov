@@ -41,8 +41,8 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex md:items-center md:gap-4">
-          <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-            Register Bot
+          <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" asChild>
+            <Link to="/api-docs">Register Bot</Link>
           </Button>
         </div>
 
@@ -74,8 +74,8 @@ export function Header() {
               </Link>
             ))}
             <hr className="my-2" />
-            <Button size="sm" className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-              Register Bot
+            <Button size="sm" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" asChild>
+              <Link to="/api-docs">Register Bot</Link>
             </Button>
           </nav>
         </div>
