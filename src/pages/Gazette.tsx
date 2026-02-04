@@ -3,32 +3,33 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ScrollText, Scale, Crown, Gavel, FileText, Megaphone, 
-  Search, Calendar, List, Bot 
-} from "lucide-react";
-import { format, parseISO, startOfDay, isSameDay } from "date-fns";
+import { ScrollText, Scale, Crown, FileText, Gavel, Megaphone, Bot, Users, BookOpen, List, Calendar } from "lucide-react";
+import { startOfDay, parseISO, isSameDay } from "date-fns";
+import { GazetteFeatured } from "@/components/gazette/GazetteFeatured";
+import { GazetteFilters } from "@/components/gazette/GazetteFilters";
+import { GazetteEntryCard } from "@/components/gazette/GazetteEntryCard";
+import { GazetteTimeline } from "@/components/gazette/GazetteTimeline";
 
-const entryTypeConfig: Record<string, { icon: typeof ScrollText; color: string; label: string }> = {
-  law: { icon: Scale, color: "text-blue-600 bg-blue-100", label: "Law" },
-  election_result: { icon: Crown, color: "text-amber-600 bg-amber-100", label: "Election" },
-  executive_order: { icon: FileText, color: "text-purple-600 bg-purple-100", label: "Executive Order" },
-  veto: { icon: Gavel, color: "text-red-600 bg-red-100", label: "Veto" },
-  impeachment: { icon: Gavel, color: "text-red-600 bg-red-100", label: "Impeachment" },
-  announcement: { icon: Megaphone, color: "text-green-600 bg-green-100", label: "Announcement" },
-  bot_verified: { icon: Bot, color: "text-cyan-600 bg-cyan-100", label: "Bot Verified" },
-};
-
-const entryTypes = Object.keys(entryTypeConfig);
+const entryTypes = [
+  { key: "law", label: "Laws", icon: Scale },
+  { key: "election_result", label: "Elections", icon: Crown },
+  { key: "executive_order", label: "Executive Orders", icon: FileText },
+  { key: "veto", label: "Vetoes", icon: Gavel },
+  { key: "court_ruling", label: "Court Rulings", icon: BookOpen },
+  { key: "committee_report", label: "Committee Reports", icon: Users },
+  { key: "announcement", label: "Announcements", icon: Megaphone },
+  { key: "bot_verified", label: "Bot Verified", icon: Bot },
+];
 
 export default function Gazette() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"list" | "timeline">("list");
+  const [viewMode, setViewMode] = useState<"featured" | "list" | "timeline">("featured");
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["gazette"],
@@ -53,6 +54,18 @@ export default function Gazette() {
         return false;
       }
       
+      // Date range filter
+      if (dateRange.from) {
+        const entryDate = new Date(entry.published_at);
+        if (entryDate < dateRange.from) return false;
+      }
+      if (dateRange.to) {
+        const entryDate = new Date(entry.published_at);
+        const endOfDay = new Date(dateRange.to);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (entryDate > endOfDay) return false;
+      }
+      
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -64,7 +77,7 @@ export default function Gazette() {
       
       return true;
     });
-  }, [data, activeFilter, searchQuery]);
+  }, [data, activeFilter, searchQuery, dateRange]);
 
   // Group by date for timeline view
   const groupedByDate = useMemo(() => {
@@ -93,42 +106,13 @@ export default function Gazette() {
     return groups;
   }, [filteredEntries]);
 
-  const renderEntry = (entry: NonNullable<typeof data>[number]) => {
-    const config = entryTypeConfig[entry.entry_type] || entryTypeConfig.announcement;
-    const Icon = config.icon;
-    
-    return (
-      <article
-        key={entry.id}
-        className="rounded-lg border bg-card p-6 shadow-sm"
-      >
-        <div className="flex items-start gap-4">
-          <div className={`rounded-lg p-2 ${config.color}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${config.color}`}>
-                {config.label}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {format(new Date(entry.published_at), "MMM d, yyyy 'at' h:mm a")}
-              </span>
-            </div>
-            <h2 className="mt-2 text-xl font-semibold text-foreground">
-              {entry.title}
-            </h2>
-            <p className="mt-2 text-muted-foreground">{entry.content}</p>
-          </div>
-        </div>
-      </article>
-    );
-  };
+  const rssUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gazette?format=rss`;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-12">
+        {/* Hero */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
             <ScrollText className="h-8 w-8 text-primary-foreground" />
@@ -139,72 +123,53 @@ export default function Gazette() {
           </p>
         </div>
 
-        {/* Search and Controls */}
-        <div className="mb-6 space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search gazette entries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Filters and View Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Type Filters */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={activeFilter === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveFilter("all")}
-              >
-                All
-              </Button>
-              {entryTypes.map((type) => {
-                const config = entryTypeConfig[type];
-                return (
-                  <Button
-                    key={type}
-                    variant={activeFilter === type ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setActiveFilter(type)}
-                    className="gap-1"
-                  >
-                    <config.icon className="h-3 w-3" />
-                    <span className="hidden sm:inline">{config.label}</span>
-                  </Button>
-                );
-              })}
-            </div>
-
-            {/* View Toggle */}
-            <div className="flex gap-1 rounded-lg border p-1">
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "timeline" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("timeline")}
-              >
-                <Calendar className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+        {/* Filters */}
+        <div className="mb-6">
+          <GazetteFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            entryTypes={entryTypes}
+            rssUrl={rssUrl}
+          />
         </div>
 
-        {/* Results count */}
-        <div className="mb-4 text-sm text-muted-foreground">
-          {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
-          {activeFilter !== "all" && ` in ${entryTypeConfig[activeFilter]?.label || activeFilter}`}
-          {searchQuery && ` matching "${searchQuery}"`}
+        {/* View Toggle */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
+            {activeFilter !== "all" && ` in ${entryTypes.find(t => t.key === activeFilter)?.label || activeFilter}`}
+            {searchQuery && ` matching "${searchQuery}"`}
+          </div>
+          <div className="flex gap-1 rounded-lg border p-1">
+            <Button
+              variant={viewMode === "featured" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("featured")}
+              title="Featured view"
+            >
+              <ScrollText className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              title="List view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "timeline" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("timeline")}
+              title="Timeline view"
+            >
+              <Calendar className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
@@ -219,39 +184,36 @@ export default function Gazette() {
             <ScrollText className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No entries found</h3>
             <p className="text-muted-foreground">
-              {searchQuery || activeFilter !== "all"
+              {searchQuery || activeFilter !== "all" || dateRange.from || dateRange.to
                 ? "Try adjusting your filters or search query"
                 : "Government actions will appear here once they occur"}
             </p>
           </div>
-        ) : viewMode === "list" ? (
-          <div className="space-y-4">
-            {filteredEntries.map(renderEntry)}
-          </div>
-        ) : (
-          /* Timeline View */
+        ) : viewMode === "featured" ? (
           <div className="space-y-8">
-            {groupedByDate.map(({ date, entries }) => (
-              <div key={date.toISOString()}>
-                <div className="sticky top-20 z-10 mb-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-border" />
-                  <Badge variant="secondary" className="text-sm font-medium">
-                    <Calendar className="mr-1 h-3 w-3" />
-                    {format(date, "EEEE, MMMM d, yyyy")}
-                  </Badge>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <div className="space-y-4 pl-4 border-l-2 border-primary/20">
-                  {entries.map((entry) => (
-                    <div key={entry.id} className="relative">
-                      <div className="absolute -left-[9px] top-6 h-4 w-4 rounded-full border-2 border-primary bg-background" />
-                      {renderEntry(entry)}
-                    </div>
+            {/* Featured Section */}
+            <GazetteFeatured entries={filteredEntries.slice(0, 4)} />
+            
+            {/* Rest of entries */}
+            {filteredEntries.length > 4 && (
+              <>
+                <h2 className="text-xl font-semibold border-b pb-2">Recent Activity</h2>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {filteredEntries.slice(4).map((entry) => (
+                    <GazetteEntryCard key={entry.id} entry={entry} />
                   ))}
                 </div>
-              </div>
+              </>
+            )}
+          </div>
+        ) : viewMode === "list" ? (
+          <div className="space-y-4">
+            {filteredEntries.map((entry) => (
+              <GazetteEntryCard key={entry.id} entry={entry} />
             ))}
           </div>
+        ) : (
+          <GazetteTimeline groupedByDate={groupedByDate} />
         )}
       </main>
       <Footer />
