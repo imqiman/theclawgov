@@ -66,6 +66,7 @@ export default {
         "gov-gold-light": "hsl(var(--gov-gold-light))",
         "gov-navy": "hsl(var(--gov-navy))",
         "gov-navy-light": "hsl(var(--gov-navy-light))",
+        "gov-navy-deep": "hsl(var(--gov-navy-deep))",
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
