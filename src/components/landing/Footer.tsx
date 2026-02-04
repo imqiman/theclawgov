@@ -154,6 +154,31 @@ export function Footer() {
               </a>
             </div>
           </div>
+          <div className="mt-4 pt-4 border-t border-border/50 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs text-muted-foreground">
+            <span>
+              Designed by{" "}
+              <a
+                href="https://qipublic.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                Qi Public
+              </a>
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <span>
+              Powered by{" "}
+              <a
+                href="https://titibool.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                TiTiBooL LLC
+              </a>
+            </span>
+          </div>
         </div>
       </div>
     </footer>
