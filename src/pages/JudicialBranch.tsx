@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Scale, Gavel, User, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Scale, Gavel, User, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ const caseTypeLabels: Record<string, string> = {
   bill_challenge: "Bill Challenge",
   executive_order_challenge: "Executive Order Challenge",
   impeachment_appeal: "Impeachment Appeal",
+  dispute: "Dispute",
 };
 
 export default function JudicialBranch() {
@@ -74,27 +76,30 @@ export default function JudicialBranch() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {justices.map((justice: any) => (
-                <Card key={justice.id}>
-                  <CardContent className="flex items-center gap-4 py-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={justice.bot?.avatar_url} />
-                      <AvatarFallback>
-                        <User className="h-6 w-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">{justice.bot?.name || "Unknown"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Appointed {format(new Date(justice.appointed_at), "MMM d, yyyy")}
-                      </p>
-                      {justice.appointed_by_bot && (
-                        <p className="text-xs text-muted-foreground">
-                          by {justice.appointed_by_bot.name}
+                <Link key={justice.id} to={`/bots/${justice.bot?.id}`}>
+                  <Card className="hover:border-primary transition-colors">
+                    <CardContent className="flex items-center gap-4 py-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={justice.bot?.avatar_url} />
+                        <AvatarFallback>
+                          <User className="h-6 w-6" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-semibold">Justice {justice.bot?.name || "Unknown"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Appointed {format(new Date(justice.appointed_at), "MMM d, yyyy")}
                         </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                        {justice.appointed_by_bot && (
+                          <p className="text-xs text-muted-foreground">
+                            by {justice.appointed_by_bot.name}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
@@ -102,7 +107,7 @@ export default function JudicialBranch() {
 
         {/* Cases */}
         <section>
-          <h2 className="mb-6 text-2xl font-semibold">Court Cases</h2>
+          <h2 className="mb-6 text-2xl font-semibold">Court Docket</h2>
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="all">All Cases</TabsTrigger>
@@ -162,51 +167,56 @@ function CasesList({ cases, isLoading }: { cases: any[]; isLoading: boolean }) {
         const StatusIcon = statusConfig.icon;
 
         return (
-          <Card key={courtCase.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <CardTitle className="text-lg">
-                    Case #{courtCase.case_number}: {courtCase.title}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {caseTypeLabels[courtCase.case_type] || courtCase.case_type}
-                  </p>
+          <Link key={courtCase.id} to={`/cases/${courtCase.id}`}>
+            <Card className="hover:border-primary transition-colors cursor-pointer">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-lg">
+                      Case #{courtCase.case_number}: {courtCase.title}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {caseTypeLabels[courtCase.case_type] || courtCase.case_type}
+                    </p>
+                  </div>
+                  <Badge variant={statusConfig.variant} className="flex items-center gap-1">
+                    <StatusIcon className="h-3 w-3" />
+                    {statusConfig.label}
+                  </Badge>
                 </div>
-                <Badge variant={statusConfig.variant} className="flex items-center gap-1">
-                  <StatusIcon className="h-3 w-3" />
-                  {statusConfig.label}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                {courtCase.description}
-              </p>
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={courtCase.filed_by_bot?.avatar_url} />
-                    <AvatarFallback>
-                      <User className="h-3 w-3" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-muted-foreground">
-                    Filed by {courtCase.filed_by_bot?.name || "Unknown"}
-                  </span>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                  {courtCase.description}
+                </p>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={courtCase.filed_by_bot?.avatar_url} />
+                      <AvatarFallback>
+                        <User className="h-3 w-3" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-muted-foreground">
+                      Filed by {courtCase.filed_by_bot?.name || "Unknown"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">
+                      {format(new Date(courtCase.filed_at), "MMM d, yyyy")}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
-                <span className="text-muted-foreground">
-                  {format(new Date(courtCase.filed_at), "MMM d, yyyy")}
-                </span>
-              </div>
-              {courtCase.ruling_summary && (
-                <div className="mt-4 p-3 rounded-lg bg-muted">
-                  <p className="text-sm font-medium">Ruling:</p>
-                  <p className="text-sm text-muted-foreground">{courtCase.ruling_summary}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {courtCase.ruling_summary && (
+                  <div className="mt-4 p-3 rounded-lg bg-muted">
+                    <p className="text-sm font-medium">Ruling:</p>
+                    <p className="text-sm text-muted-foreground">{courtCase.ruling_summary}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
         );
       })}
     </div>

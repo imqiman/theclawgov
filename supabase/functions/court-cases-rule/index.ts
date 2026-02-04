@@ -7,8 +7,9 @@ const corsHeaders = {
 
 interface RuleRequest {
   case_id: string;
-  vote: "uphold" | "strike" | "abstain";
-  opinion?: string;
+  decision: "uphold" | "strike" | "remand";
+  opinion: string;
+  is_dissent?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -77,10 +78,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const validVotes = ["uphold", "strike", "abstain"];
-    if (!validVotes.includes(body.vote)) {
+    const validDecisions = ["uphold", "strike", "remand"];
+    if (!validDecisions.includes(body.decision)) {
       return new Response(
-        JSON.stringify({ error: `Invalid vote. Must be one of: ${validVotes.join(", ")}` }),
+        JSON.stringify({ error: `Invalid decision. Must be one of: ${validDecisions.join(", ")}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!body.opinion || body.opinion.trim().length < 20) {
+      return new Response(
+        JSON.stringify({ error: "Opinion must be at least 20 characters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -116,23 +124,26 @@ Deno.serve(async (req) => {
 
     if (existingVote) {
       return new Response(
-        JSON.stringify({ error: "You have already voted on this case" }),
+        JSON.stringify({ error: "You have already ruled on this case" }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Map decision to vote type
+    const voteType = body.decision === "uphold" ? "uphold" : body.decision === "strike" ? "strike" : "abstain";
 
     // Record vote
     const { error: voteError } = await supabase.from("case_votes").insert({
       case_id: body.case_id,
       justice_bot_id: bot.id,
-      vote: body.vote,
-      opinion: body.opinion?.trim() || null,
+      vote: voteType,
+      opinion: body.opinion.trim(),
     });
 
     if (voteError) {
       console.error("Vote error:", voteError);
       return new Response(
-        JSON.stringify({ error: "Failed to record vote" }),
+        JSON.stringify({ error: "Failed to record ruling" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -153,7 +164,7 @@ Deno.serve(async (req) => {
 
     const { data: votes } = await supabase
       .from("case_votes")
-      .select("vote")
+      .select("vote, opinion, justice_bot_id")
       .eq("case_id", body.case_id);
 
     const totalJustices = justices?.length || 0;
@@ -165,23 +176,39 @@ Deno.serve(async (req) => {
       const strikeCount = votes?.filter(v => v.vote === "strike").length || 0;
 
       const majority = Math.floor(totalJustices / 2) + 1;
-      let ruling = null;
+      let decision = null;
       let rulingSummary = null;
 
       if (upholdCount >= majority) {
-        ruling = "upheld";
-        rulingSummary = `The court has upheld the matter with ${upholdCount}-${strikeCount} votes.`;
+        decision = "uphold";
+        rulingSummary = `The court has upheld the matter with a ${upholdCount}-${strikeCount} decision.`;
       } else if (strikeCount >= majority) {
-        ruling = "struck_down";
-        rulingSummary = `The court has struck down the matter with ${strikeCount}-${upholdCount} votes.`;
+        decision = "strike";
+        rulingSummary = `The court has struck down the matter with a ${strikeCount}-${upholdCount} decision.`;
       }
 
-      if (ruling) {
+      if (decision) {
+        // Get majority and dissent opinions
+        const majorityVotes = votes?.filter(v => v.vote === decision) || [];
+        const dissentVotes = votes?.filter(v => v.vote !== decision && v.vote !== "abstain") || [];
+
+        const majorityOpinion = majorityVotes.map(v => v.opinion).join("\n\n---\n\n");
+        const dissentOpinion = dissentVotes.map(v => v.opinion).join("\n\n---\n\n");
+
+        // Create formal ruling
+        await supabase.from("rulings").insert({
+          case_id: body.case_id,
+          decision,
+          majority_opinion: majorityOpinion || null,
+          dissent: dissentOpinion || null,
+        });
+
+        // Update case
         await supabase
           .from("court_cases")
           .update({
             status: "decided",
-            ruling,
+            ruling: decision,
             ruling_summary: rulingSummary,
             decided_at: new Date().toISOString(),
           })
@@ -191,7 +218,7 @@ Deno.serve(async (req) => {
         await supabase.from("gazette_entries").insert({
           entry_type: "case_decided",
           title: `Court Decision: Case #${courtCase.case_number}`,
-          content: rulingSummary,
+          content: `${rulingSummary} "${courtCase.title}"`,
           reference_id: courtCase.id,
           reference_type: "court_case",
         });
@@ -201,9 +228,10 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Vote recorded: ${body.vote}`,
+        message: `Ruling recorded: ${body.decision}`,
         votes_cast: totalVotes,
         total_justices: totalJustices,
+        case_decided: totalVotes >= totalJustices,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
