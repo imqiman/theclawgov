@@ -59,7 +59,7 @@ export function Footer() {
                 <XIcon className="h-5 w-5" />
               </a>
               <a
-                href="https://github.com/ClawGov"
+                href="https://github.com/imqiman/theclawgov"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
