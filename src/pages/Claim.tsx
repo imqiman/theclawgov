@@ -15,7 +15,8 @@ import { toast } from "@/hooks/use-toast";
 export default function Claim() {
   const { code } = useParams<{ code: string }>();
   const [tweetUrl, setTweetUrl] = useState("");
-
+  const [postText, setPostText] = useState("");
+  const [useManualMode, setUseManualMode] = useState(false);
   const { data: bot, isLoading, error } = useQuery({
     queryKey: ["claim", code],
     queryFn: async () => {
@@ -38,13 +39,17 @@ export default function Claim() {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async (tweetUrl: string) => {
+    mutationFn: async ({ tweetUrl, postText }: { tweetUrl?: string; postText?: string }) => {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bot-verify`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ claim_code: code, tweet_url: tweetUrl }),
+          body: JSON.stringify({ 
+            claim_code: code, 
+            tweet_url: tweetUrl,
+            post_text: postText,
+          }),
         }
       );
       if (!response.ok) {
@@ -70,15 +75,27 @@ export default function Claim() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tweetUrl.trim()) {
-      toast({
-        title: "Post URL required",
-        description: "Please enter the URL of your verification post",
-        variant: "destructive",
-      });
-      return;
+    if (useManualMode) {
+      if (!postText.trim()) {
+        toast({
+          title: "Post text required",
+          description: "Please paste the full text of your verification post",
+          variant: "destructive",
+        });
+        return;
+      }
+      verifyMutation.mutate({ postText: postText.trim() });
+    } else {
+      if (!tweetUrl.trim()) {
+        toast({
+          title: "Post URL required",
+          description: "Please enter the URL of your verification post",
+          variant: "destructive",
+        });
+        return;
+      }
+      verifyMutation.mutate({ tweetUrl: tweetUrl.trim() });
     }
-    verifyMutation.mutate(tweetUrl);
   };
 
   return (
@@ -165,23 +182,56 @@ export default function Claim() {
                   {/* Step 2 */}
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="rounded-lg border bg-muted/50 p-4">
-                      <h3 className="font-semibold">Step 2: Submit Post URL</h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Paste the URL of your verification post below:
-                      </p>
-                      <div className="mt-3">
-                        <Label htmlFor="post-url" className="sr-only">
-                          Post URL
-                        </Label>
-                        <Input
-                          id="post-url"
-                          type="url"
-                          placeholder="https://x.com/..."
-                          value={tweetUrl}
-                          onChange={(e) => setTweetUrl(e.target.value)}
-                          disabled={verifyMutation.isPending}
-                        />
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Step 2: Verify Your Post</h3>
+                        <button
+                          type="button"
+                          onClick={() => setUseManualMode(!useManualMode)}
+                          className="text-xs text-accent hover:underline"
+                        >
+                          {useManualMode ? "Use post URL instead" : "Having trouble? Paste text instead"}
+                        </button>
                       </div>
+                      
+                      {useManualMode ? (
+                        <>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            Paste the full text of your verification post:
+                          </p>
+                          <div className="mt-3">
+                            <Label htmlFor="post-text" className="sr-only">
+                              Post Text
+                            </Label>
+                            <textarea
+                              id="post-text"
+                              className="w-full min-h-[100px] rounded-md border bg-background px-3 py-2 text-sm"
+                              placeholder="Paste your full post text here..."
+                              value={postText}
+                              onChange={(e) => setPostText(e.target.value)}
+                              disabled={verifyMutation.isPending}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            Paste the URL of your verification post:
+                          </p>
+                          <div className="mt-3">
+                            <Label htmlFor="post-url" className="sr-only">
+                              Post URL
+                            </Label>
+                            <Input
+                              id="post-url"
+                              type="url"
+                              placeholder="https://x.com/..."
+                              value={tweetUrl}
+                              onChange={(e) => setTweetUrl(e.target.value)}
+                              disabled={verifyMutation.isPending}
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <Button
