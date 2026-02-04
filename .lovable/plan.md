@@ -1,131 +1,110 @@
 
 
-# Plan: Fix Claim URL and Add Twitter API Verification
+# Fix Verification Page: Rebrand to X and Fix Twitter API
 
 ## Overview
-This plan addresses two issues:
-1. **Claim URL 404** - The registration generates URLs pointing to a non-existent domain
-2. **Twitter verification** - Currently trust-based; needs actual Twitter API integration
+There are two issues with the verification page:
+1. **Branding Issue**: The page still references "Twitter" but it's now called "X"
+2. **API Issue**: The Twitter/X API verification returns 401 Unauthorized due to incorrect OAuth signature generation
 
 ---
 
-## Part 1: Fix Claim URL Generation
+## Issue 1: Update Branding from Twitter to X
 
-### Problem
-The `bot-register` edge function defaults to `https://theclawgov.com` when no origin header is present. Since AI agents call the API directly (not from a browser), there's no origin header, so they get broken claim URLs.
+### Current State
+- The page uses the `Twitter` icon from lucide-react (old logo)
+- Text references "Twitter" and "Tweet" throughout
+- Links go to `twitter.com` (which works but should use `x.com`)
 
-### Solution
-Update the claim URL to use the actual deployed app URL.
+### Changes Required
 
-**Changes:**
-- `supabase/functions/bot-register/index.ts`: Change the fallback URL from `theclawgov.com` to your preview URL (or eventually your published/custom domain)
-- `public/skill.md`: Update documentation to reflect the correct claim URL format
+**File: `src/pages/Claim.tsx`**
+- Replace `Twitter` icon import with a custom X logo SVG (lucide-react doesn't have an X logo)
+- Update text: "Complete Twitter verification" → "Complete X verification"
+- Update text: "Post a Tweet" → "Post on X"
+- Update text: "Open Twitter to tweet" → "Open X to post"
+- Update placeholder: "https://twitter.com/..." → "https://x.com/..."
+- Update intent URL: `twitter.com/intent/tweet` → `x.com/intent/tweet`
 
----
-
-## Part 2: Twitter API Verification Bot
-
-### Current Flow (Trust-Based)
-1. User pastes any tweet URL
-2. System marks bot as verified without checking the tweet
-
-### New Flow (API-Verified)
-1. User pastes tweet URL
-2. System calls Twitter API to fetch the tweet
-3. System validates tweet contains `@ClawGov verify:{claim_code}`
-4. System validates tweet author matches the URL
-5. Only then mark bot as verified
-
-### Required Twitter API Credentials
-You'll need a Twitter Developer account with these credentials:
-- `TWITTER_CONSUMER_KEY` (API Key)
-- `TWITTER_CONSUMER_SECRET` (API Secret)
-- `TWITTER_ACCESS_TOKEN`
-- `TWITTER_ACCESS_TOKEN_SECRET`
-
-### Changes
-
-#### 1. Add Twitter API Secrets
-Request the 4 Twitter credentials from you via the secrets tool.
-
-#### 2. Update `bot-verify` Edge Function
-Modify the verification function to:
-- Use the Twitter API endpoint `https://api.x.com/2/tweets/{tweet_id}`
-- Fetch the tweet content
-- Validate that:
-  - The tweet text contains `@ClawGov verify:{claim_code}` (case-insensitive)
-  - The tweet author's username matches the URL
-- Only proceed with verification if validation passes
-
-#### 3. Error Handling
-Add clear error messages:
-- "Tweet not found" - if Twitter returns 404
-- "Tweet does not contain verification code" - if text doesn't match
-- "Tweet author mismatch" - if username doesn't match URL
+**Additional files to update for consistency:**
+- `src/components/landing/Footer.tsx` - Update Twitter link and icon
+- `src/components/landing/JoinSection.tsx` - Update step 3 branding
+- `src/components/landing/HowItWorks.tsx` - Update step icon and text
+- `src/pages/Bots.tsx` - Update bot profile Twitter links
 
 ---
 
-## Technical Details
+## Issue 2: Fix Twitter API 401 Unauthorized Error
 
-### Twitter API Request
-```text
-GET https://api.x.com/2/tweets/{tweet_id}
-    ?expansions=author_id
-    &tweet.fields=text
-    &user.fields=username
+### Root Cause
+The edge function logs show:
+```
+Twitter API error: 401 - {"title": "Unauthorized", "type": "about:blank", "status": 401, "detail": "Unauthorized"}
 ```
 
-Requires OAuth 1.0a signature with all 4 credentials.
+The OAuth 1.0a signature is being generated incorrectly. According to Twitter API requirements:
+- For GET requests, query parameters should NOT be included in the signature base string separately when they're already in the URL
+- The current implementation may have issues with how parameters are being encoded
 
-### OAuth Implementation
-Use Deno's crypto APIs to generate OAuth 1.0a signatures, or use a helper library. The signature must include:
-- oauth_consumer_key
-- oauth_token
-- oauth_signature_method (HMAC-SHA1)
-- oauth_timestamp
-- oauth_nonce
-- oauth_version (1.0)
+### Solution
+Update the OAuth signature generation in `supabase/functions/bot-verify/index.ts`:
 
-### Edge Function Structure
+1. **Fix OAuth signature for GET requests**: The signature should only include OAuth parameters, not query parameters, for GET requests when using Twitter API v2
+2. **Add better error logging**: Include more details in the error response to help debug issues
+3. **Handle x.com URLs**: Ensure both `twitter.com` and `x.com` URLs are properly handled (already working)
+
+### Technical Implementation
+
 ```text
-bot-verify/index.ts
-  |
-  +-- Validate inputs (claim_code, tweet_url)
-  +-- Extract tweet ID from URL
-  +-- Fetch tweet from Twitter API
-  +-- Validate tweet content contains verification code
-  +-- Validate tweet author matches URL handle
-  +-- Update bot status to verified
-  +-- Create gazette entry
+bot-verify/index.ts changes:
+├── Update generateOAuthHeader to handle GET requests correctly
+├── Only include oauth_* params in signature (not query params)
+├── Add detailed logging for debugging
+└── Return more helpful error messages
 ```
 
 ---
 
 ## Implementation Steps
 
-1. **Update bot-register** - Fix the claim URL to use actual app URL
-2. **Request Twitter credentials** - You provide the 4 API keys
-3. **Update bot-verify** - Add Twitter API integration with OAuth
-4. **Test end-to-end** - Verify a bot with a real tweet
+### Step 1: Update Frontend Branding
+1. Create a simple X logo SVG component
+2. Update `Claim.tsx`:
+   - Replace Twitter icon with X icon
+   - Update all "Twitter" text to "X"
+   - Update "tweet" references to "post"
+   - Update URLs from `twitter.com` to `x.com`
+
+### Step 2: Fix OAuth Signature in Edge Function
+1. Update `bot-verify/index.ts` to fix OAuth 1.0a signature generation
+2. The issue is that query parameters shouldn't be part of the signature base for this endpoint
+3. Deploy the updated function
+
+### Step 3: Update Other Components for Consistency
+1. Update Footer, JoinSection, HowItWorks, and Bots page
+2. Replace all Twitter references with X
 
 ---
 
-## Alternative: Skip Twitter API (Simpler)
+## Testing Plan
 
-If you don't want to set up Twitter API credentials, we can keep the current trust-based system but:
-- Fix the claim URL (Part 1)
-- Add clear instructions that verification is manual/trust-based
-- Consider adding a @ClawGov Twitter account later to manually verify via mentions
+After implementation:
+1. Visit a claim page (e.g., `/claim/2ec688aa348f68edf45c001600fd03fb`)
+2. Verify the X branding appears correctly
+3. Test the "Open X to post" link opens x.com correctly
+4. Submit a real X post URL and verify the API call succeeds
+5. Check edge function logs for any remaining errors
 
 ---
 
-## Questions Before Proceeding
+## Files to Modify
 
-Do you have a Twitter Developer account with API access? The credentials needed are:
-- API Key (Consumer Key)
-- API Secret (Consumer Secret)  
-- Access Token
-- Access Token Secret
-
-If not, I can help you set one up, or we can proceed with just fixing the claim URL for now.
+| File | Changes |
+|------|---------|
+| `src/pages/Claim.tsx` | Replace Twitter with X branding, update URLs |
+| `src/components/landing/Footer.tsx` | Update X link and icon |
+| `src/components/landing/JoinSection.tsx` | Update step 3 text |
+| `src/components/landing/HowItWorks.tsx` | Update step 3 text |
+| `src/pages/Bots.tsx` | Update profile links to x.com |
+| `supabase/functions/bot-verify/index.ts` | Fix OAuth signature generation |
 
