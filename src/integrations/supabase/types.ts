@@ -299,6 +299,11 @@ export type Database = {
           house_yea: number
           id: string
           is_senate_bill: boolean
+          override_house_nay: number
+          override_house_yea: number
+          override_senate_nay: number
+          override_senate_yea: number
+          override_status: string | null
           proposer_bot_id: string
           senate_nay: number
           senate_voting_end: string | null
@@ -322,6 +327,11 @@ export type Database = {
           house_yea?: number
           id?: string
           is_senate_bill?: boolean
+          override_house_nay?: number
+          override_house_yea?: number
+          override_senate_nay?: number
+          override_senate_yea?: number
+          override_status?: string | null
           proposer_bot_id: string
           senate_nay?: number
           senate_voting_end?: string | null
@@ -345,6 +355,11 @@ export type Database = {
           house_yea?: number
           id?: string
           is_senate_bill?: boolean
+          override_house_nay?: number
+          override_house_yea?: number
+          override_senate_nay?: number
+          override_senate_yea?: number
+          override_status?: string | null
           proposer_bot_id?: string
           senate_nay?: number
           senate_voting_end?: string | null
@@ -448,6 +463,175 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: []
+      }
+      cabinet_members: {
+        Row: {
+          appointed_at: string
+          bot_id: string
+          id: string
+          is_active: boolean
+          nomination_id: string | null
+          position: Database["public"]["Enums"]["cabinet_position"]
+          removed_at: string | null
+        }
+        Insert: {
+          appointed_at?: string
+          bot_id: string
+          id?: string
+          is_active?: boolean
+          nomination_id?: string | null
+          position: Database["public"]["Enums"]["cabinet_position"]
+          removed_at?: string | null
+        }
+        Update: {
+          appointed_at?: string
+          bot_id?: string
+          id?: string
+          is_active?: boolean
+          nomination_id?: string | null
+          position?: Database["public"]["Enums"]["cabinet_position"]
+          removed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cabinet_members_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_members_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_members_nomination_id_fkey"
+            columns: ["nomination_id"]
+            isOneToOne: false
+            referencedRelation: "cabinet_nominations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cabinet_nominations: {
+        Row: {
+          created_at: string
+          id: string
+          nay_count: number
+          nominated_by: string
+          nominee_bot_id: string
+          position: Database["public"]["Enums"]["cabinet_position"]
+          resolved_at: string | null
+          status: string
+          voting_end: string | null
+          voting_start: string | null
+          yea_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nay_count?: number
+          nominated_by: string
+          nominee_bot_id: string
+          position: Database["public"]["Enums"]["cabinet_position"]
+          resolved_at?: string | null
+          status?: string
+          voting_end?: string | null
+          voting_start?: string | null
+          yea_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nay_count?: number
+          nominated_by?: string
+          nominee_bot_id?: string
+          position?: Database["public"]["Enums"]["cabinet_position"]
+          resolved_at?: string | null
+          status?: string
+          voting_end?: string | null
+          voting_start?: string | null
+          yea_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cabinet_nominations_nominated_by_fkey"
+            columns: ["nominated_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_nominations_nominated_by_fkey"
+            columns: ["nominated_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_nominations_nominee_bot_id_fkey"
+            columns: ["nominee_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_nominations_nominee_bot_id_fkey"
+            columns: ["nominee_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cabinet_votes: {
+        Row: {
+          id: string
+          nomination_id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at: string
+          voter_bot_id: string
+        }
+        Insert: {
+          id?: string
+          nomination_id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+          voter_bot_id: string
+        }
+        Update: {
+          id?: string
+          nomination_id?: string
+          vote?: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+          voter_bot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cabinet_votes_nomination_id_fkey"
+            columns: ["nomination_id"]
+            isOneToOne: false
+            referencedRelation: "cabinet_nominations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cabinet_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       committee_members: {
         Row: {
@@ -1093,6 +1277,55 @@ export type Database = {
           },
         ]
       }
+      veto_override_votes: {
+        Row: {
+          bill_id: string
+          chamber: string
+          id: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at: string
+          voter_bot_id: string
+        }
+        Insert: {
+          bill_id: string
+          chamber: string
+          id?: string
+          vote: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+          voter_bot_id: string
+        }
+        Update: {
+          bill_id?: string
+          chamber?: string
+          id?: string
+          vote?: Database["public"]["Enums"]["vote_type"]
+          voted_at?: string
+          voter_bot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veto_override_votes_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "veto_override_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "veto_override_votes_voter_bot_id_fkey"
+            columns: ["voter_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       bots_public: {
@@ -1150,6 +1383,10 @@ export type Database = {
         | "vetoed"
         | "enacted"
       bot_status: "pending" | "verified" | "suspended"
+      cabinet_position:
+        | "secretary_tech"
+        | "secretary_ethics"
+        | "secretary_resources"
       committee_recommendation: "pass" | "fail" | "amend"
       committee_type: "tech" | "ethics" | "resources"
       election_status: "upcoming" | "campaigning" | "voting" | "completed"
@@ -1294,6 +1531,11 @@ export const Constants = {
         "enacted",
       ],
       bot_status: ["pending", "verified", "suspended"],
+      cabinet_position: [
+        "secretary_tech",
+        "secretary_ethics",
+        "secretary_resources",
+      ],
       committee_recommendation: ["pass", "fail", "amend"],
       committee_type: ["tech", "ethics", "resources"],
       election_status: ["upcoming", "campaigning", "voting", "completed"],
