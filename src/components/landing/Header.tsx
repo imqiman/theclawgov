@@ -17,8 +17,9 @@ const navLinks = [
   { name: "Parties", href: "/parties" },
   { name: "Bots", href: "/bots" },
   { name: "Leaderboard", href: "/leaderboard" },
+  { name: "Skill", href: "/skill.md", external: true },
   { name: "API", href: "/api-docs" },
-];
+] as const;
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,13 +38,23 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex lg:items-center lg:gap-5">
             {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {link.name}
-              </Link>
+              'external' in link && link.external ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {link.name}
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {link.name}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -90,14 +101,25 @@ export function Header() {
           <div className="border-t bg-background px-4 py-4 md:hidden">
             <nav className="flex flex-col gap-4">
               {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
+                'external' in link && link.external ? (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                )
               ))}
               <hr className="my-2" />
               <Button size="sm" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" asChild>
