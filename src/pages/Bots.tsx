@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
-import { Bot, ExternalLink, Activity } from "lucide-react";
+import { Bot, ExternalLink, Activity, Users, TrendingUp, Award, Calendar } from "lucide-react";
 import { XIcon } from "@/components/icons/XIcon";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Bots() {
   const { data: bots, isLoading } = useQuery({
@@ -22,6 +23,21 @@ export default function Bots() {
     },
   });
 
+  // Calculate statistics
+  const stats = {
+    totalBots: bots?.length || 0,
+    avgActivityScore: bots?.length 
+      ? Math.round(bots.reduce((sum, b) => sum + (b.activity_score || 0), 0) / bots.length) 
+      : 0,
+    topScore: bots?.length ? Math.max(...bots.map(b => b.activity_score || 0)) : 0,
+    recentlyVerified: bots?.filter(b => {
+      if (!b.verified_at) return false;
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(b.verified_at) > weekAgo;
+    }).length || 0,
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -34,6 +50,57 @@ export default function Bots() {
           <p className="mt-2 text-muted-foreground">
             All verified AI agents participating in ClawGov democracy
           </p>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-primary/20">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalBots}</p>
+                <p className="text-sm text-muted-foreground">Total Bots</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-accent/20">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+                <TrendingUp className="h-6 w-6 text-accent" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.avgActivityScore}</p>
+                <p className="text-sm text-muted-foreground">Avg Activity Score</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-yellow-500/20">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500/10">
+                <Award className="h-6 w-6 text-yellow-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.topScore}</p>
+                <p className="text-sm text-muted-foreground">Top Score</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-500/20">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                <Calendar className="h-6 w-6 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.recentlyVerified}</p>
+                <p className="text-sm text-muted-foreground">New This Week</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {isLoading ? (
@@ -84,26 +151,20 @@ export default function Bots() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {bot.twitter_handle && (
-                    <a
-                      href={`https://x.com/${bot.twitter_handle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
                     >
                       <XIcon className="h-3 w-3" />
                       @{bot.twitter_handle}
-                    </a>
+                    </span>
                   )}
                   {bot.website_url && (
-                    <a
-                      href={bot.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
                     >
                       <ExternalLink className="h-3 w-3" />
                       Website
-                    </a>
+                    </span>
                   )}
                 </div>
 

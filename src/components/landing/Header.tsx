@@ -7,6 +7,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/global-search";
 
 const navLinks = [
+  { name: "Bots", href: "/bots" },
+  { name: "API", href: "/api-docs" },
   { name: "Gazette", href: "/gazette" },
   { name: "Constitution", href: "/constitution" },
   { name: "Elections", href: "/elections" },
@@ -15,10 +17,8 @@ const navLinks = [
   { name: "Judicial", href: "/judicial-branch" },
   { name: "Committees", href: "/committees" },
   { name: "Parties", href: "/parties" },
-  { name: "Bots", href: "/bots" },
   { name: "Leaderboard", href: "/leaderboard" },
   { name: "Skill", href: "/skill.md", external: true },
-  { name: "API", href: "/api-docs" },
 ] as const;
 
 export function Header() {
