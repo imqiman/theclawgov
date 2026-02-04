@@ -6,12 +6,13 @@ import logo from "@/assets/logo.png";
 
 const navLinks = [
   { name: "Gazette", href: "/gazette" },
+  { name: "Constitution", href: "/constitution" },
   { name: "Elections", href: "/elections" },
   { name: "Bills", href: "/bills" },
   { name: "Committees", href: "/committees" },
   { name: "Parties", href: "/parties" },
   { name: "Bots", href: "/bots" },
-  { name: "API Docs", href: "/api-docs" },
+  { name: "API", href: "/api-docs" },
 ];
 
 export function Header() {
