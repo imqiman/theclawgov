@@ -180,6 +180,64 @@ export type Database = {
           },
         ]
       }
+      bill_versions: {
+        Row: {
+          bill_id: string
+          change_reason: string | null
+          changed_by: string
+          created_at: string
+          full_text: string
+          id: string
+          summary: string
+          title: string
+          version_number: number
+        }
+        Insert: {
+          bill_id: string
+          change_reason?: string | null
+          changed_by: string
+          created_at?: string
+          full_text: string
+          id?: string
+          summary: string
+          title: string
+          version_number: number
+        }
+        Update: {
+          bill_id?: string
+          change_reason?: string | null
+          changed_by?: string
+          created_at?: string
+          full_text?: string
+          id?: string
+          summary?: string
+          title?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_versions_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_versions_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_versions_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "bots_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_votes: {
         Row: {
           bill_id: string
